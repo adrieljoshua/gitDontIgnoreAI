@@ -1,0 +1,838 @@
+{
+	"compiler": {
+		"version": "0.8.26+commit.8a97fa7a"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "accessControlAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "_approvalAuthority",
+						"type": "address"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "moduleIndex",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "freelancer",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "FundsReleased",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "moduleIndex",
+						"type": "uint256"
+					}
+				],
+				"name": "ModuleApproved",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "moduleIndex",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "freelancer",
+						"type": "address"
+					}
+				],
+				"name": "ModuleBidApproved",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "moduleIndex",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "freelancer",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "bidAmount",
+						"type": "uint256"
+					}
+				],
+				"name": "ModuleBidPlaced",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "moduleIndex",
+						"type": "uint256"
+					}
+				],
+				"name": "ModuleCompleted",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "client",
+						"type": "address"
+					}
+				],
+				"name": "ProjectRegistered",
+				"type": "event"
+			},
+			{
+				"inputs": [],
+				"name": "accessControl",
+				"outputs": [
+					{
+						"internalType": "contract IAccessControl",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "approvalAuthority",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "moduleIndex",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "bidIndex",
+						"type": "uint256"
+					}
+				],
+				"name": "approveModuleBid",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "moduleIndex",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "bidAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "proposal",
+						"type": "string"
+					}
+				],
+				"name": "bidForModule",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "listOngoingProjects",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "id",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "client",
+								"type": "address"
+							},
+							{
+								"internalType": "string",
+								"name": "title",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "budget",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "isPaid",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "githubRepo",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "createdAt",
+								"type": "uint256"
+							},
+							{
+								"components": [
+									{
+										"internalType": "string",
+										"name": "name",
+										"type": "string"
+									},
+									{
+										"internalType": "address",
+										"name": "freelancer",
+										"type": "address"
+									},
+									{
+										"internalType": "uint256",
+										"name": "percentageWeight",
+										"type": "uint256"
+									},
+									{
+										"internalType": "bool",
+										"name": "isCompleted",
+										"type": "bool"
+									},
+									{
+										"internalType": "bool",
+										"name": "isApproved",
+										"type": "bool"
+									},
+									{
+										"components": [
+											{
+												"internalType": "string",
+												"name": "name",
+												"type": "string"
+											},
+											{
+												"internalType": "bool",
+												"name": "isCompleted",
+												"type": "bool"
+											}
+										],
+										"internalType": "struct FreelanceProjectContract.Submodule[]",
+										"name": "submodules",
+										"type": "tuple[]"
+									},
+									{
+										"components": [
+											{
+												"internalType": "address",
+												"name": "freelancer",
+												"type": "address"
+											},
+											{
+												"internalType": "uint256",
+												"name": "bidAmount",
+												"type": "uint256"
+											},
+											{
+												"internalType": "string",
+												"name": "proposal",
+												"type": "string"
+											},
+											{
+												"internalType": "bool",
+												"name": "isApproved",
+												"type": "bool"
+											}
+										],
+										"internalType": "struct FreelanceProjectContract.ModuleBid[]",
+										"name": "bids",
+										"type": "tuple[]"
+									}
+								],
+								"internalType": "struct FreelanceProjectContract.Module[]",
+								"name": "modules",
+								"type": "tuple[]"
+							}
+						],
+						"internalType": "struct FreelanceProjectContract.Project[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "client",
+						"type": "address"
+					}
+				],
+				"name": "listProjectsByClient",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "id",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "client",
+								"type": "address"
+							},
+							{
+								"internalType": "string",
+								"name": "title",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "budget",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "isPaid",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "githubRepo",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "createdAt",
+								"type": "uint256"
+							},
+							{
+								"components": [
+									{
+										"internalType": "string",
+										"name": "name",
+										"type": "string"
+									},
+									{
+										"internalType": "address",
+										"name": "freelancer",
+										"type": "address"
+									},
+									{
+										"internalType": "uint256",
+										"name": "percentageWeight",
+										"type": "uint256"
+									},
+									{
+										"internalType": "bool",
+										"name": "isCompleted",
+										"type": "bool"
+									},
+									{
+										"internalType": "bool",
+										"name": "isApproved",
+										"type": "bool"
+									},
+									{
+										"components": [
+											{
+												"internalType": "string",
+												"name": "name",
+												"type": "string"
+											},
+											{
+												"internalType": "bool",
+												"name": "isCompleted",
+												"type": "bool"
+											}
+										],
+										"internalType": "struct FreelanceProjectContract.Submodule[]",
+										"name": "submodules",
+										"type": "tuple[]"
+									},
+									{
+										"components": [
+											{
+												"internalType": "address",
+												"name": "freelancer",
+												"type": "address"
+											},
+											{
+												"internalType": "uint256",
+												"name": "bidAmount",
+												"type": "uint256"
+											},
+											{
+												"internalType": "string",
+												"name": "proposal",
+												"type": "string"
+											},
+											{
+												"internalType": "bool",
+												"name": "isApproved",
+												"type": "bool"
+											}
+										],
+										"internalType": "struct FreelanceProjectContract.ModuleBid[]",
+										"name": "bids",
+										"type": "tuple[]"
+									}
+								],
+								"internalType": "struct FreelanceProjectContract.Module[]",
+								"name": "modules",
+								"type": "tuple[]"
+							}
+						],
+						"internalType": "struct FreelanceProjectContract.Project[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "freelancer",
+						"type": "address"
+					}
+				],
+				"name": "listProjectsForFreelancer",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "id",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "client",
+								"type": "address"
+							},
+							{
+								"internalType": "string",
+								"name": "title",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "budget",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "isPaid",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "githubRepo",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "createdAt",
+								"type": "uint256"
+							},
+							{
+								"components": [
+									{
+										"internalType": "string",
+										"name": "name",
+										"type": "string"
+									},
+									{
+										"internalType": "address",
+										"name": "freelancer",
+										"type": "address"
+									},
+									{
+										"internalType": "uint256",
+										"name": "percentageWeight",
+										"type": "uint256"
+									},
+									{
+										"internalType": "bool",
+										"name": "isCompleted",
+										"type": "bool"
+									},
+									{
+										"internalType": "bool",
+										"name": "isApproved",
+										"type": "bool"
+									},
+									{
+										"components": [
+											{
+												"internalType": "string",
+												"name": "name",
+												"type": "string"
+											},
+											{
+												"internalType": "bool",
+												"name": "isCompleted",
+												"type": "bool"
+											}
+										],
+										"internalType": "struct FreelanceProjectContract.Submodule[]",
+										"name": "submodules",
+										"type": "tuple[]"
+									},
+									{
+										"components": [
+											{
+												"internalType": "address",
+												"name": "freelancer",
+												"type": "address"
+											},
+											{
+												"internalType": "uint256",
+												"name": "bidAmount",
+												"type": "uint256"
+											},
+											{
+												"internalType": "string",
+												"name": "proposal",
+												"type": "string"
+											},
+											{
+												"internalType": "bool",
+												"name": "isApproved",
+												"type": "bool"
+											}
+										],
+										"internalType": "struct FreelanceProjectContract.ModuleBid[]",
+										"name": "bids",
+										"type": "tuple[]"
+									}
+								],
+								"internalType": "struct FreelanceProjectContract.Module[]",
+								"name": "modules",
+								"type": "tuple[]"
+							}
+						],
+						"internalType": "struct FreelanceProjectContract.Project[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "moduleIndex",
+						"type": "uint256"
+					}
+				],
+				"name": "markModuleComplete",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "projectCount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "projects",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "id",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "client",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "title",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "budget",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "isPaid",
+						"type": "bool"
+					},
+					{
+						"internalType": "string",
+						"name": "githubRepo",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "createdAt",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "title",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "budget",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "githubRepo",
+						"type": "string"
+					},
+					{
+						"internalType": "string[]",
+						"name": "moduleNames",
+						"type": "string[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "moduleWeights",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "string[][]",
+						"name": "submoduleNames",
+						"type": "string[][]"
+					}
+				],
+				"name": "registerProject",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "moduleIndex",
+						"type": "uint256"
+					}
+				],
+				"name": "releaseModuleFunds",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"stateMutability": "payable",
+				"type": "receive"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/project_management.sol": "FreelanceProjectContract"
+		},
+		"evmVersion": "cancun",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/project_management.sol": {
+			"keccak256": "0xf5c2d7d48798e934ad72ddc501b0fdda33786fe54f1242efa54920faf6109034",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://25091aa54d8391c16990651c8737af472658cde10e783de03e7ad0741ef78e77",
+				"dweb:/ipfs/QmQbMUW27AESTGt9s1X7sE93qSZQDS5t53hBJCbukBj4Tc"
+			]
+		}
+	},
+	"version": 1
+}
