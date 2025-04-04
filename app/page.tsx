@@ -23,7 +23,7 @@ export default function Home() {
             </p>
             <div className="flex justify-center gap-6">
               <Button asChild className="bg-yellow-500 text-black hover:bg-yellow-400 text-lg px-8 py-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all">
-                <Link href="/projects/create">Build Project</Link>
+                <Link href="/chat">Build Project</Link>
               </Button>
               <Button asChild variant="outline" className="bg-white text-black border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all text-lg px-8 py-6">
                 <Link href="/developers">For Developers</Link>

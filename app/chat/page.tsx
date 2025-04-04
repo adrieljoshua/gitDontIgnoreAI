@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,55 +8,46 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Send } from "lucide-react"
 import Navbar from "@/components/navbar"
 
-type Message = {
-  id: string
-  content: string
-  sender: "user" | "ai"
-  timestamp: Date
+type Question = {
+  id: number
+  question: string
+  answer: string
 }
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "Hello! I'm your project assistant. How can I help you with your project today?",
-      sender: "ai",
-      timestamp: new Date(),
-    },
-  ])
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [questions, setQuestions] = useState<Question[]>([
+    { id: 1, question: "What are we gonna build today?", answer: "" },
+    { id: 2, question: "What is our project called?", answer: "" },
+    { id: 3, question: "Kindly provide a detailed comprehensive description of all the features and components that you want in your project like modules and submodules?", answer: "" },
+    { id: 4, question: "How much will you be funding for the project?", answer: "" },
+    { id: 5, question: "Are you sure?", answer: "" }
+  ])
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!input.trim()) return
 
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: input,
-      sender: "user",
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
     setIsLoading(true)
+    
+    // Update the current question's answer
+    const updatedQuestions = [...questions]
+    updatedQuestions[currentQuestionIndex].answer = input
+    setQuestions(updatedQuestions)
+    
+    setInput("")
+    setIsLoading(false)
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: `I understand you're asking about "${input}". I can help you with project planning, developer recommendations, and technical advice. What specific aspect would you like to explore?`,
-        sender: "ai",
-        timestamp: new Date(),
-      }
-
-      setMessages((prev) => [...prev, aiMessage])
-      setIsLoading(false)
-    }, 1500)
+    // Move to next question if available
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1)
+    }
   }
+
+  const currentQuestion = questions[currentQuestionIndex]
+  const showNextQuestion = currentQuestionIndex < questions.length - 1
 
   return (
     <div className="flex min-h-screen flex-col bg-dark-900">
@@ -66,24 +56,24 @@ export default function ChatPage() {
         <Card className="w-full max-w-4xl mx-auto h-[80vh] flex flex-col bg-dark-800 border-dark-700">
           <CardHeader className="bg-dark-700 text-white border-b border-dark-600">
             <CardTitle className="flex items-center gap-2">
-              <span className="text-yellow-500">DevCollab</span> AI Assistant
+              <span className="text-yellow-500">Project</span> Questionnaire
             </CardTitle>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((message) => (
-              <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.sender === "user"
-                      ? "bg-yellow-500 text-black"
-                      : "bg-dark-700 text-white border border-dark-600"
-                  }`}
-                >
-                  <p>{message.content}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </p>
+            {questions.map((q, index) => (
+              <div key={q.id} className={`space-y-2 ${index > currentQuestionIndex ? 'hidden' : ''}`}>
+                <div className="flex justify-start">
+                  <div className="max-w-[80%] rounded-lg p-3 bg-dark-700 text-white border border-dark-600">
+                    <p>{q.question}</p>
+                  </div>
                 </div>
+                {q.answer && (
+                  <div className="flex justify-end">
+                    <div className="max-w-[80%] rounded-lg p-3 bg-yellow-500 text-black">
+                      <p>{q.answer}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
             {isLoading && (
@@ -103,13 +93,13 @@ export default function ChatPage() {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your message..."
+                placeholder={currentQuestionIndex < questions.length ? `Answer: ${currentQuestion.question}` : "All questions completed"}
                 className="flex-1 bg-dark-700 border-dark-600 text-white placeholder:text-gray-400"
-                disabled={isLoading}
+                disabled={isLoading || currentQuestionIndex >= questions.length}
               />
               <Button
                 type="submit"
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading || !input.trim() || currentQuestionIndex >= questions.length}
                 className="bg-yellow-500 text-black hover:bg-yellow-400"
               >
                 <Send className="h-4 w-4" />
