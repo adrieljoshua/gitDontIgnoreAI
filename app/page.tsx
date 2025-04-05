@@ -18,7 +18,7 @@ export default function Home() {
             <div className="absolute inset-0 bg-dark-900/80"></div>
           </div>
           <div className="relative z-10 flex flex-col items-center justify-center max-w-4xl mx-auto px-4">
-            <h1 className="text-7xl font-extrabold mb-8 font-prompt text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">DevCollab Platform</h1>
+            <h1 className="text-7xl font-extrabold mb-8 font-prompt text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">gitDontIgnore.ai</h1>
             <p className="text-2xl text-gray-300 mb-12 max-w-2xl mx-auto font-prompt drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
               A platform for developers to collaborate on projects, share knowledge, and build amazing things together.
             </p>
