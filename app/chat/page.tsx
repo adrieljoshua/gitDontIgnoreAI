@@ -291,9 +291,9 @@ export default function ChatPage() {
   const showNextQuestion = currentQuestionIndex < questions.length - 1
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="flex-1 container py-8">
+      <main className="flex-1 container py-8 bg-yellow-100">
         <Card className="w-full max-w-4xl mx-auto h-[80vh] flex flex-col bg-white border-gray-200">
           <CardHeader className="bg-gray-50 text-dark-900 border-b border-gray-200">
             <CardTitle className="flex items-center gap-2">
