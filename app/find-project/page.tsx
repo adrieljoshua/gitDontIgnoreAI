@@ -342,70 +342,71 @@ export default function OngoingProjects() {
   const ProjectCard = ({ project, onBid }: { project: Project, onBid: (project: Project) => void }) => {
     const projectLogo = getRandomProjectLogo();
     
-    console.log("Rendering ProjectCard with project:", project);
-    console.log("Project title in card:", project.title);
-    
     return (
-      <Card className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col hover:translate-y-1 transition-all duration-200">
-        <CardHeader className="pb-2 border-b-4 border-black">
-          <div className="flex items-start gap-3">
-            <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center border-2 border-black">
+      <Card className="bg-white border-3 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col transition-all duration-200 hover:translate-y-[-4px] hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,0.9)]">
+        <CardHeader className="pb-4 border-b-2 border-black bg-white px-6 pt-5">
+          <div className="flex items-start gap-4">
+            <div className="h-14 w-14 rounded-md bg-yellow-100 flex items-center justify-center border-2 border-black p-2 shrink-0">
               {projectLogo}
             </div>
-            <div className="flex-1">
-              <CardTitle className="text-xl font-bold text-black">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-xl font-bold text-black tracking-tight leading-tight mb-1 break-words">
                 {safeString(project.title) || "Untitled Project"}
               </CardTitle>
-              <CardDescription className="text-black font-medium mt-1">
+              <CardDescription className="text-gray-700 font-medium text-sm line-clamp-2">
                 {extractTagline(safeString(project.description) || 'No description available')}
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         
-        <CardContent className="py-4 flex-grow space-y-4">
+        <CardContent className="py-5 px-6 flex-grow space-y-5">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <Code className="h-4 w-4 text-gray-500" />
-              <span>{safeString(project.ownerUsername)}</span>
-              <span>({formatWalletAddress(project.owner)})</span>
+            <div className="flex items-center gap-2 text-xs font-medium bg-gray-50 px-3 py-2 rounded-md border-2 border-gray-200">
+              <Code className="h-4 w-4 text-gray-700 shrink-0" />
+              <span className="text-gray-800 font-semibold truncate">{safeString(project.ownerUsername)}</span>
+              <span className="text-gray-500 shrink-0">({formatWalletAddress(project.owner)})</span>
             </div>
             
-            <Badge variant="outline" className="bg-yellow-200 text-black border-2 border-black">
-              <DollarSign className="h-3 w-3 mr-1" />
+            <Badge variant="outline" className="bg-yellow-100 text-black border-2 border-yellow-300 px-3 py-1 font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]">
+              <DollarSign className="h-3 w-3 mr-1 shrink-0" />
               {safelyFormatEther(project.budget)} ETH
             </Badge>
           </div>
           
-          <div className="flex justify-between items-center">
-            <div className="bg-gray-100 rounded-full h-2 w-full">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs font-bold text-gray-700">Completion</span>
+              <span className="text-xs font-bold text-gray-900">{project.completionPercentage}%</span>
+            </div>
+            <div className="bg-gray-200 rounded-full h-3 w-full border border-gray-300 overflow-hidden">
               <div 
-                className="bg-green-500 rounded-full h-2" 
+                className="bg-green-500 rounded-full h-[10px] transition-all duration-500" 
                 style={{ width: `${project.completionPercentage}%` }} 
               />
             </div>
-            <span className="ml-2 text-xs font-bold">{project.completionPercentage}%</span>
           </div>
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="bg-blue-100 rounded-full p-1 border border-blue-300">
+          <div className="flex items-center justify-between bg-blue-50 p-3 border-2 border-blue-200 rounded-md shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 rounded-full p-1.5 border-2 border-blue-300">
                 <Users className="h-4 w-4 text-blue-700" />
               </div>
-              <span className="text-sm font-medium">{project.developerCount} developers</span>
+              <span className="text-sm font-bold text-blue-900">{project.developerCount} developer{project.developerCount !== 1 ? 's' : ''}</span>
             </div>
-            <span className="text-xs text-gray-500">{project.modules.length} modules</span>
+            <span className="text-sm font-medium bg-white px-2 py-1 rounded-md border-2 border-gray-200 text-gray-700">{project.modules.length} module{project.modules.length !== 1 ? 's' : ''}</span>
           </div>
           
-          <div className="overflow-x-auto">
-            <div className="flex gap-2 py-2">
+          <div className="overflow-x-auto pb-1">
+            <p className="text-xs font-bold text-gray-700 mb-2">Available modules:</p>
+            <div className="flex gap-2 py-1">
               {project.modules.map((module, i) => (
                 <div 
                   key={i} 
-                  className={`min-w-fit px-3 py-1 rounded-full text-xs font-semibold border-2 border-black ${
+                  className={`min-w-fit px-3 py-1.5 rounded-md text-xs font-bold border-2 ${
                     module.freelancer === "0x0000000000000000000000000000000000000000" 
-                      ? "bg-blue-200 text-black" 
-                      : "bg-gray-200 text-gray-500"
+                      ? "bg-blue-100 text-blue-900 border-blue-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]" 
+                      : "bg-gray-100 text-gray-500 border-gray-300"
                   }`}
                 >
                   {safeString(module.name)}
@@ -415,10 +416,10 @@ export default function OngoingProjects() {
           </div>
         </CardContent>
         
-        <CardFooter className="pt-2 border-t-4 border-black">
+        <CardFooter className="pt-3 border-t-2 border-black bg-white p-4">
           <Button 
             onClick={() => onBid(project)} 
-            className="w-full bg-yellow-400 text-black font-bold hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all"
+            className="w-full bg-yellow-400 text-black font-bold hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] hover:translate-y-1 transition-all py-3"
             disabled={!walletConnected}
           >
             Bid on Project
@@ -429,22 +430,22 @@ export default function OngoingProjects() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-yellow-50">
+    <div className="flex min-h-screen flex-col bg-[#fffdf7]">
       <Navbar />
-      <main className="flex-1 container py-8">
-        <section className="relative mb-12">
+      <main className="flex-1 container py-12 px-4 mx-auto max-w-7xl">
+        <section className="relative mb-16">
           <div className="flex flex-col items-center justify-center text-center mb-16">
-            <h1 className="text-5xl font-extrabold mb-4 font-prompt text-black drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+            <h1 className="text-5xl font-extrabold mb-6 font-prompt text-black drop-shadow-[3px_3px_0px_rgba(0,0,0,0.8)]">
               Find Projects
             </h1>
-            <p className="text-xl text-black max-w-2xl mx-auto">
+            <p className="text-xl text-gray-800 max-w-2xl mx-auto leading-relaxed">
               Browse available projects and bid on modules that match your skills
             </p>
 
             {!walletConnected && (
               <Button 
                 onClick={connectWallet} 
-                className="mt-8 bg-yellow-500 text-black hover:bg-yellow-400 px-8 py-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-2"
+                className="mt-10 bg-yellow-500 text-black hover:bg-yellow-400 px-8 py-5 border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:translate-y-1 transition-all flex items-center gap-3 font-bold"
               >
                 <Wallet className="h-5 w-5" />
                 Connect Wallet
@@ -457,39 +458,39 @@ export default function OngoingProjects() {
               <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-black"></div>
             </div>
           ) : projects.length === 0 ? (
-            <Alert className="max-w-2xl mx-auto bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-black">
-              <Clock className="h-5 w-5 text-black" />
-              <AlertTitle>No projects available</AlertTitle>
-              <AlertDescription>
+            <Alert className="max-w-2xl mx-auto bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] text-black p-6">
+              <Clock className="h-6 w-6 text-black" />
+              <AlertTitle className="text-lg font-bold mt-2">No projects available</AlertTitle>
+              <AlertDescription className="mt-2 text-gray-700">
                 There are currently no ongoing projects. Check back later or create your own project.
               </AlertDescription>
             </Alert>
           ) : (
             <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid grid-cols-3 max-w-md mx-auto mb-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                <TabsTrigger value="all" className="text-black data-[state=active]:bg-yellow-500 data-[state=active]:text-black border-r-2 border-black">All Projects</TabsTrigger>
-                <TabsTrigger value="new" className="text-black data-[state=active]:bg-yellow-500 data-[state=active]:text-black border-r-2 border-black">New</TabsTrigger>
-                <TabsTrigger value="popular" className="text-black data-[state=active]:bg-yellow-500 data-[state=active]:text-black">Popular</TabsTrigger>
+              <TabsList className="grid grid-cols-3 max-w-md mx-auto mb-10 bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)]">
+                <TabsTrigger value="all" className="text-black data-[state=active]:bg-yellow-400 data-[state=active]:text-black border-r-2 border-black py-3 font-semibold">All Projects</TabsTrigger>
+                <TabsTrigger value="new" className="text-black data-[state=active]:bg-yellow-400 data-[state=active]:text-black border-r-2 border-black py-3 font-semibold">New</TabsTrigger>
+                <TabsTrigger value="popular" className="text-black data-[state=active]:bg-yellow-400 data-[state=active]:text-black py-3 font-semibold">Popular</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="all" className="mt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <TabsContent value="all" className="mt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {projects.map((project, index) => (
                     <ProjectCard key={index} project={project} onBid={setSelectedProject} />
                   ))}
                 </div>
               </TabsContent>
               
-              <TabsContent value="new" className="mt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <TabsContent value="new" className="mt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {projects.slice(0, 3).map((project, index) => (
                     <ProjectCard key={index} project={project} onBid={setSelectedProject} />
                   ))}
                 </div>
               </TabsContent>
               
-              <TabsContent value="popular" className="mt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <TabsContent value="popular" className="mt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {[...projects].sort((a, b) => Number(b.budget) - Number(a.budget)).map((project, index) => (
                     <ProjectCard key={index} project={project} onBid={setSelectedProject} />
                   ))}
@@ -501,19 +502,19 @@ export default function OngoingProjects() {
 
       {selectedProject && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-lg bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
-              <CardHeader className="border-b-4 border-black">
-                <CardTitle className="text-black">Bid on {selectedProject.title}</CardTitle>
-                <CardDescription className="text-black">
+            <Card className="w-full max-w-lg bg-white border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]">
+              <CardHeader className="border-b-2 border-black bg-white px-6 py-5">
+                <CardTitle className="text-black text-xl font-bold tracking-tight">Bid on {selectedProject.title}</CardTitle>
+                <CardDescription className="text-gray-700 mt-2">
                   Choose a module and submit your proposal
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 py-4">
+              <CardContent className="space-y-5 py-6 px-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-black">Select Module:</label>
+                  <label className="text-sm font-bold text-black">Select Module:</label>
                   <select 
-                    className="w-full bg-white border-2 border-black rounded-none p-2 text-black"
-            value={moduleIndex}
+                    className="w-full bg-white border-2 border-black rounded-none p-3 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]"
+                    value={moduleIndex}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setModuleIndex(parseInt(e.target.value))}
                   >
                     {selectedProject.modules.map((module, index) => (
@@ -527,40 +528,40 @@ export default function OngoingProjects() {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-black">Bid Amount (ETH):</label>
+                  <label className="text-sm font-bold text-black">Bid Amount (ETH):</label>
                   <Input
-            type="text"
-            value={bidAmount}
-            onChange={(e) => setBidAmount(e.target.value)}
-                    className="bg-white border-2 border-black rounded-none text-black"
+                    type="text"
+                    value={bidAmount}
+                    onChange={(e) => setBidAmount(e.target.value)}
+                    className="bg-white border-2 border-black rounded-none text-black p-3 h-12 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]"
                     placeholder="0.1"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-black">Your Proposal:</label>
+                  <label className="text-sm font-bold text-black">Your Proposal:</label>
                   <Textarea
-            value={proposal}
-            onChange={(e) => setProposal(e.target.value)}
-                    className="bg-white border-2 border-black rounded-none text-black min-h-[120px]"
+                    value={proposal}
+                    onChange={(e) => setProposal(e.target.value)}
+                    className="bg-white border-2 border-black rounded-none text-black min-h-[150px] p-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]"
                     placeholder="Describe your experience and how you would approach this module..."
                   />
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between border-t-4 border-black">
+              <CardFooter className="flex justify-between border-t-2 border-black bg-white p-5 gap-4">
                 <Button 
                   variant="outline" 
                   onClick={() => setSelectedProject(null)}
-                  className="border-2 border-black text-black hover:text-black hover:bg-gray-100"
+                  className="border-2 border-black text-black hover:text-black hover:bg-gray-100 py-3 px-5"
                 >
                   Cancel
                 </Button>
                 <Button 
                   onClick={placeBid}
-                  className="bg-yellow-500 text-black hover:bg-yellow-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all"
+                  className="bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] hover:translate-y-1 transition-all py-3 px-6 flex-1 font-bold"
                   disabled={!bidAmount.trim() || !proposal.trim()}
                 >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  <CheckCircle2 className="h-5 w-5 mr-2" />
                   Submit Bid
                 </Button>
               </CardFooter>
@@ -569,17 +570,17 @@ export default function OngoingProjects() {
         )}
       </main>
 
-      <footer className="w-full py-8 bg-black text-white">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+      <footer className="w-full py-10 bg-black text-white">
+        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-yellow-500">DevCollab</span>
+              <span className="text-xl font-bold text-yellow-400">DevCollab</span>
             </div>
             <p className="text-sm text-white">© 2025 DevCollab. All rights reserved.</p>
-            <div className="flex items-center gap-6">
-              <a href="/terms" className="text-sm text-white hover:text-yellow-500 transition-colors">Terms</a>
-              <a href="/privacy" className="text-sm text-white hover:text-yellow-500 transition-colors">Privacy</a>
-              <a href="/contact" className="text-sm text-white hover:text-yellow-500 transition-colors">Contact</a>
+            <div className="flex items-center gap-8">
+              <a href="/terms" className="text-sm text-white hover:text-yellow-400 transition-colors">Terms</a>
+              <a href="/privacy" className="text-sm text-white hover:text-yellow-400 transition-colors">Privacy</a>
+              <a href="/contact" className="text-sm text-white hover:text-yellow-400 transition-colors">Contact</a>
             </div>
           </div>
         </div>

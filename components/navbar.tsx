@@ -117,17 +117,17 @@ export default function Navbar() {
   }, [userAddress])
 
   return (
-    <header className="w-full border-b-2 border-black dark:border-gray-800 px-6">
+    <header className="w-full border-b-2 border-black dark:border-gray-800 px-6 bg-white">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-x-16">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl text-yellow-500 font-extrabold">  DevCollab</span>
+            <span className="text-2xl text-yellow-500 font-extrabold">DevCollab</span>
           </Link>
           <nav className="hidden md:flex gap-6">
             <Link
-              href="/projects"
+              href="/find-project"
               className={`text-sm flex font-bold items-center transition-colors gap-x-2 hover:text-yellow-500 ${
-                pathname.startsWith("/projects") ? "text-yellow-500" : ""
+                pathname.startsWith("/find-project") ? "text-yellow-500" : ""
               }`}
             >
               <Globe size={16}/>
