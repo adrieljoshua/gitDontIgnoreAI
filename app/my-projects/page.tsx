@@ -76,7 +76,7 @@ export default function MyProjects() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // Function to safely format ETH values
+  // Function to safely format cUSD values
   const safelyFormatEther = (value: any): string => {
     try {
       if (typeof value === 'bigint' || (typeof value === 'string' && value.trim() !== '')) {
@@ -525,87 +525,100 @@ export default function MyProjects() {
   const ProjectCard = ({ project }: { project: Project }) => {
     const projectLogo = getRandomProjectLogo();
     const projectType = project.isClientProject ? "Owner" : "Contributor";
+    const projectId = project.id?.toString();
     
     return (
-      <Card 
-        className="bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col transition-all duration-200 hover:translate-y-[-4px] hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,0.9)] cursor-pointer"
-        onClick={() => router.push(`/projects/${project.id}`)}
-      >
-        <CardHeader className="pb-4 border-b-2 border-black bg-white px-6 pt-5">
-          <div className="flex items-start gap-4">
-            <div className="h-14 w-14 rounded-md bg-yellow-100 flex items-center justify-center border-2 border-black p-2 shrink-0">
-              {projectLogo}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between">
-              <CardTitle className="text-xl font-bold text-black tracking-tight leading-tight mb-1 break-words">
-                {safeString(project.title) || "Untitled Project"}
-              </CardTitle>
-                <Badge variant="outline" className={`${project.isClientProject ? "bg-green-100 text-green-800 border-green-300" : "bg-blue-100 text-blue-800 border-blue-300"} text-xs px-2 py-1 rounded-md font-medium border-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]`}>
-                  {projectType}
+      <div className="relative">
+        {/* Simple direct link for the entire card */}
+        <a 
+          href={projectId ? `/projects/${projectId}` : "#"} 
+          className="block no-underline text-inherit"
+        >
+          <Card 
+            className="bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col transition-all duration-200 hover:translate-y-[-4px] hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,0.9)] cursor-pointer"
+          >
+            <CardHeader className="pb-4 border-b-2 border-black bg-white px-6 pt-5">
+              <div className="flex items-start gap-4">
+                <div className="h-14 w-14 rounded-md bg-yellow-100 flex items-center justify-center border-2 border-black p-2 shrink-0">
+                  {projectLogo}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between">
+                  <CardTitle className="text-xl font-bold text-black tracking-tight leading-tight mb-1 break-words">
+                    {safeString(project.title) || "Untitled Project"}
+                  </CardTitle>
+                    <Badge variant="outline" className={`${project.isClientProject ? "bg-green-100 text-green-800 border-green-300" : "bg-blue-100 text-blue-800 border-blue-300"} text-xs px-2 py-1 rounded-md font-medium border-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]`}>
+                      {projectType}
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-gray-700 font-medium text-sm line-clamp-2">
+                    {project.tagline || 'No description available'}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="py-5 px-6 flex-grow space-y-5 pb-16">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2 text-xs font-medium bg-gray-50 px-3 py-2 rounded-md border-2 border-gray-200">
+                  <HandCoins className="h-4 w-4 text-gray-700 shrink-0" />
+                  <span className="text-gray-800 font-semibold truncate">{safeString(project.ownerUsername)}</span>
+                  <span className="text-gray-500 shrink-0">({formatWalletAddress(project.owner)})</span>
+                </div>
+                
+                <Badge variant="outline" className="bg-yellow-100 text-black border-2 border-yellow-300 px-3 py-1 font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]">
+                  <DollarSign className="h-3 w-3 mr-1 shrink-0" />
+                  {safelyFormatEther(project.budget)} cUSD
                 </Badge>
               </div>
-              <CardDescription className="text-gray-700 font-medium text-sm line-clamp-2">
-                {project.tagline || 'No description available'}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="py-5 px-6 flex-grow space-y-5">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2 text-xs font-medium bg-gray-50 px-3 py-2 rounded-md border-2 border-gray-200">
-              <HandCoins className="h-4 w-4 text-gray-700 shrink-0" />
-              <span className="text-gray-800 font-semibold truncate">{safeString(project.ownerUsername)}</span>
-              <span className="text-gray-500 shrink-0">({formatWalletAddress(project.owner)})</span>
-            </div>
-            
-            <Badge variant="outline" className="bg-yellow-100 text-black border-2 border-yellow-300 px-3 py-1 font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]">
-              <DollarSign className="h-3 w-3 mr-1 shrink-0" />
-              {safelyFormatEther(project.budget)} ETH
-            </Badge>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between items-center mb-1">
-              <div className="flex items-center gap-3">
-                <Users className="h-4 w-4 text-black" />
-                <span className="text-sm font-bold text-black">{project.developerCount}</span>
-              </div>
-              <span className="text-xs font-bold text-gray-900">{project.completionPercentage}%</span>
-            </div>
-            <div className="bg-gray-200 rounded-full h-3 w-full border border-gray-300 overflow-hidden">
-              <div 
-                className="bg-green-500 rounded-full h-[10px] transition-all duration-500" 
-                style={{ width: `${project.completionPercentage}%` }} 
-              />
-            </div>
-          </div>
-          
-          <div className="pb-1">
-            <p className="text-xs font-bold text-gray-700 mb-2">Project Modules:</p>
-            <div className="flex flex-wrap gap-2 py-1">
-              {project.modules.map((module, i) => (
-                <div 
-                  key={i} 
-                  className={`px-3 py-1.5 rounded-md text-xs font-bold border-2 ${
-                    module.freelancer === "0x0000000000000000000000000000000000000000" 
-                      ? "bg-blue-100 text-blue-900 border-blue-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]" 
-                      : "bg-gray-100 text-gray-500 border-gray-300"
-                  }`}
-                >
-                  {safeString(module.name)}
+              
+              <div className="space-y-2">
+                <div className="flex justify-between items-center mb-1">
+                  <div className="flex items-center gap-3">
+                    <Users className="h-4 w-4 text-black" />
+                    <span className="text-sm font-bold text-black">{project.developerCount}</span>
+                  </div>
+                  <span className="text-xs font-bold text-gray-900">{project.completionPercentage}%</span>
                 </div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
+                <div className="bg-gray-200 rounded-full h-3 w-full border border-gray-300 overflow-hidden">
+                  <div 
+                    className="bg-green-500 rounded-full h-[10px] transition-all duration-500" 
+                    style={{ width: `${project.completionPercentage}%` }} 
+                  />
+                </div>
+              </div>
+              
+              <div className="pb-1">
+                <p className="text-xs font-bold text-gray-700 mb-2">Project Modules:</p>
+                <div className="flex flex-wrap gap-2 py-1">
+                  {project.modules.map((module, i) => (
+                    <div 
+                      key={i} 
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold border-2 ${
+                        module.freelancer === "0x0000000000000000000000000000000000000000" 
+                          ? "bg-blue-100 text-blue-900 border-blue-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]" 
+                          : "bg-gray-100 text-gray-500 border-gray-300"
+                      }`}
+                    >
+                      {safeString(module.name)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </a>
         
-        <CardFooter className="pt-3 border-t-2 border-black bg-white p-4">
+        {/* Absolute positioned button that's outside the anchor tag */}
+        <div className="absolute bottom-4 left-4 right-4">
           <Button 
             onClick={(e) => {
-              e.stopPropagation(); // Prevent card click from triggering
-              router.push(`/projects/${project.id}`);
+              e.stopPropagation();
+              if (projectId) {
+                window.location.href = `/projects/${projectId}`;
+              } else {
+                console.error("Invalid project ID:", project.id);
+              }
             }}
             className="w-full bg-yellow-400 text-black font-bold hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] hover:translate-y-1 transition-all py-3"
           >
@@ -614,8 +627,8 @@ export default function MyProjects() {
               {project.isClientProject ? <Briefcase className="h-4 w-4" /> : <ExternalLink className="h-4 w-4" />}
             </div>
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     );
   };
 

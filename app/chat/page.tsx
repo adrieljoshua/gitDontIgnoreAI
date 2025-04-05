@@ -372,7 +372,7 @@ export default function ChatPage() {
     }}>
             <p className="mb-1 text-sm"><span className="font-black">Project Type:</span> {projectType}</p>
             <p className="mb-1 text-sm"><span className="font-black">Project Name:</span> {projectName}</p>
-            <p className="mb-1 text-sm"><span className="font-black">Funding:</span> {projectFunding} ETH</p>
+            <p className="mb-1 text-sm"><span className="font-black">Funding:</span> {projectFunding} cUSD</p>
             <p className="mb-1 text-sm"><span className="font-black">Description:</span> {projectDescription}</p>
           </div>
           
@@ -427,7 +427,7 @@ export default function ChatPage() {
                 {index === 1 && "What type of project are you building?"}
                 {index === 2 && "Choose a memorable name!"}
                 {index === 3 && "Describe in detail what features you need"}
-                {index === 4 && "How much ETH are you willing to fund?"}
+                {index === 4 && "How much cUSD are you willing to fund?"}
               </p>
             </div>
           </div>
@@ -468,7 +468,7 @@ export default function ChatPage() {
                 </CardContent>
                 <CardFooter className="border-t-8 border-black p-6 flex justify-center bg-green-400">
                   <Button
-                    onClick={() => router.push('/my-projects')}
+                    onClick={() => router.push('/getworkdone')}
                     className="bg-black text-white border-4 border-black px-8 py-3 text-xl font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
                   >
                     GO TO MY PROJECTS

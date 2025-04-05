@@ -200,7 +200,7 @@ export default function Projects() {
               <h2 className="text-2xl font-bold mb-4">{project.title}</h2>
               <p className="text-gray-700 mb-4">{project.description}</p>
               <div className="space-y-2">
-                <p className="font-semibold">Budget: {ethers.formatEther(project.budget)} ETH</p>
+                <p className="font-semibold">Budget: {ethers.formatEther(project.budget)} cUSD</p>
                 <p className="font-semibold">Status: {project.isPaid ? "Paid" : "Unpaid"}</p>
                 <p className="font-semibold">Role: {
                   project.client.toLowerCase() === userAddress?.toLowerCase() 

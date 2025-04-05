@@ -284,7 +284,7 @@ export default function ChatComponent() {
       />
       <input
         className="w-full p-2 border rounded mt-4"
-        placeholder="Amount in ETH..."
+        placeholder="Amount in cUSD..."
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
       />

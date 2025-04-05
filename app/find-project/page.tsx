@@ -2,17 +2,6 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import contractAbi from "../contracts/FreelanceProject.json";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Wallet, Code, ChevronsUpDown, CheckCircle2, Clock, DollarSign, Briefcase, Users, BarChart, Layers, PieChart, Database, FileCode, Server, Cpu, Package, HandCoins } from "lucide-react";
-import Navbar from "@/components/navbar";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 const CONTRACT_ADDRESS = "0x7A0399618B0bde2eeBdcAA4c1C9Da2883D118b3d";
 
@@ -28,11 +17,6 @@ interface Project {
   description: string;
   budget: any;
   modules: Module[];
-  owner: string;
-  githubRepo: string;
-  completionPercentage: number;
-  ownerUsername: string;
-  developerCount: number;
 }
 
 export default function OngoingProjects() {
@@ -42,205 +26,35 @@ export default function OngoingProjects() {
   const [bidAmount, setBidAmount] = useState("");
   const [proposal, setProposal] = useState("");
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
-  const [walletConnected, setWalletConnected] = useState(false);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [userAddress, setUserAddress] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProjects() {
-      if (typeof window !== 'undefined' && window.ethereum !== undefined) {
+      setLoading(true);
+      if (typeof window.ethereum !== "undefined") {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        
+        // Get the user's address
         try {
-          console.log("Starting to fetch blockchain projects...");
-          const provider = new ethers.BrowserProvider(window.ethereum);
+          const accounts = await provider.send("eth_requestAccounts", []);
+          if (accounts.length > 0) {
+            setUserAddress(accounts[0]);
+          }
+        } catch (error) {
+          console.error("Error getting user address:", error);
+        }
+        
           const contract = new ethers.Contract(CONTRACT_ADDRESS, contractAbi.output.abi, provider);
         
-          setLoading(true);
+        try {
           const result = await contract.listOngoingProjects();
-          
-          console.log("Raw blockchain response:", result);
-          // Examine direct structure of response
-          console.log("Result type:", typeof result);
-          console.log("Is Array?", Array.isArray(result));
-          
-          // Check first project structure if available
-          if (result && result.length > 0) {
-            // Create a function to safely stringify BigInt values
-            const replacer = (key: string, value: any) => {
-              if (typeof value === 'bigint') {
-                return value.toString();
-              }
-              return value;
-            };
-            
-            console.log("First project keys:", Object.keys(result[0]));
-            
-            try {
-              // Handle BigInt serialization
-              console.log("First project details (safe logging):");
-              Object.keys(result[0]).forEach(key => {
-                const value = result[0][key];
-                if (typeof value === 'bigint') {
-                  console.log(`  ${key}: ${value.toString()} (BigInt)`);
-                } else if (value === null) {
-                  console.log(`  ${key}: null`);
-                } else if (typeof value === 'object' && value !== null) {
-                  console.log(`  ${key}: (object/array)`);
-                  if (Array.isArray(value)) {
-                    console.log(`    Array with ${value.length} items`);
-                    if (value.length > 0) {
-                      console.log(`    First item keys: ${Object.keys(value[0]).join(', ')}`);
-                    }
-                  } else {
-                    console.log(`    Object keys: ${Object.keys(value).join(', ')}`);
-                  }
-                } else {
-                  console.log(`  ${key}: ${value}`);
-                }
-              });
-            } catch (error) {
-              console.error("Error logging project details:", error);
-            }
-            
-            // Direct access of known properties to avoid serialization issues
-            const project = result[0];
-            console.log("Raw project[0] title property:", project.title);
-            console.log("Raw project[0] name property:", project.name);
-            console.log("Raw project[0] projectTitle property:", project.projectTitle);
-            console.log("Raw project[0] projectName property:", project.projectName);
-            
-            // Check project[0] data structure for debugging
-            console.log("Is project[0] an array?", Array.isArray(project));
-            console.log("project[0] typeof:", typeof project);
-            
-            // Check numeric properties that might be related to title
-            console.log("project[0] id:", typeof project.id === 'bigint' ? project.id.toString() : project.id);
-            console.log("project[0] index:", typeof project.index === 'bigint' ? project.index.toString() : project.index);
-            
-            // If project is an array or object with numeric indices, inspect them
-            if (typeof project === 'object' && project !== null) {
-              // Look for numbered properties (e.g., '0', '1', etc.) that might contain title
-              for (let i = 0; i < 5; i++) {
-                if (project[i] !== undefined) {
-                  console.log(`project[0][${i}]:`, 
-                    typeof project[i] === 'bigint' ? project[i].toString() : 
-                    typeof project[i] === 'object' ? '(object)' : project[i]);
-                }
-              }
-              
-              // Check specific properties that blockchain contracts often use
-              if (project._title !== undefined) console.log("project[0]._title:", project._title);
-              if (project._name !== undefined) console.log("project[0]._name:", project._name);
-            }
-          }
-          
-          // Enhance project data with additional details
-          const enhancedProjects = await Promise.all(result.map(async (project: any, index: number) => {
-            console.log(`Processing project ${index}...`);
-            
-            // Extract GitHub username from repo URL (normally would come from contract)
-            const repoUrl = project.githubRepo || "https://github.com/username/repo";
-            const username = repoUrl.split('/')[3] || "username";
-            
-            // Log the project structure more safely
-            console.log(`Project ${index} raw structure:`);
-            if (typeof project === 'object' && project !== null) {
-              // Check direct properties first
-              console.log(`- Direct properties: ${Object.keys(project).join(', ')}`);
-              
-              // Check if the project is an array-like object with numeric indices
-              if (typeof project[0] !== 'undefined') {
-                console.log(`- Appears to have array-like structure with item at index 0`);
-                // Try to extract title from the first item if it exists
-                const potentialTitle = 
-                  project[0]?.title || 
-                  project[0]?.name || 
-                  project[0]?.projectName || 
-                  project[0];
-                console.log(`- First item potential title: ${potentialTitle}`);
-              }
-              
-              // Try to identify where the title might be stored
-              ['title', 'name', 'projectName', 'projectTitle', '_title', '_name'].forEach(key => {
-                const value = project[key];
-                if (value !== undefined) {
-                  console.log(`- Found property '${key}': ${value}`);
-                }
-              });
-              
-              // Check numeric indices explicitly
-              for (let i = 0; i < 5; i++) {
-                if (project[i] !== undefined) {
-                  const value = project[i];
-                  console.log(`- Found value at index ${i}: ${
-                    typeof value === 'object' ? '(object)' : 
-                    typeof value === 'bigint' ? value.toString() : value
-                  }`);
-                }
-              }
-            }
-            
-            // Try different strategies to extract title
-            // 1. Traditional object property
-            let projectTitle = project.title || project.name || project.projectName || project.projectTitle;
-            
-            // 2. Check if it's stored in a numeric index (common in some contract return values)
-            if (!projectTitle && typeof project[0] === 'string') {
-              projectTitle = project[0];
-              console.log(`Project ${index} title extracted from index 0: '${projectTitle}'`);
-            } else if (!projectTitle && typeof project[1] === 'string') {
-              projectTitle = project[1];
-              console.log(`Project ${index} title extracted from index 1: '${projectTitle}'`);
-            }
-            
-            // 3. Fallback
-            if (!projectTitle) {
-              projectTitle = `Project ${index + 1}`;
-              console.log(`Project ${index} title not found, using fallback: '${projectTitle}'`);
-            } else {
-              console.log(`Project ${index} title extracted: '${projectTitle}'`);
-            }
-            
-            // Handle integer mapping for title if necessary
-            const projectTitleStr = typeof projectTitle === 'number' || typeof projectTitle === 'bigint' ? 
-              `Project ${projectTitle.toString()}` : String(projectTitle);
-            
-            // Calculate completion percentage based on modules with freelancers
-            const modules = Array.isArray(project.modules) ? project.modules : [];
-            const assignedModules = modules.filter((m: Module) => 
-              m.freelancer && m.freelancer !== "0x0000000000000000000000000000000000000000"
-            ).length;
-            const totalModules = modules.length;
-            const completionPercentage = totalModules > 0 ? 
-              Math.round((assignedModules / totalModules) * 100) : 0;
-            
-            const enhancedProject = {
-              ...project,
-              title: projectTitleStr, // Ensure title is set properly as string
-              owner: project.owner || "0x1234567890123456789012345678901234567890", // Default if not available
-              githubRepo: repoUrl,
-              ownerUsername: username,
-              completionPercentage,
-              developerCount: assignedModules,
-              // Ensure modules is always an array
-              modules: modules,
-              // Ensure budget is valid
-              budget: project.budget || ethers.parseEther("0")
-            };
-            
-            console.log(`Enhanced project ${index} title:`, enhancedProject.title);
-            return enhancedProject;
-          }));
-          
-          console.log("Enhanced projects:", enhancedProjects);
-          setProjects(enhancedProjects);
-          setLoading(false);
+          setProjects(result);
         } catch (error) {
           console.error("Error fetching projects:", error);
-          setLoading(false);
         }
-      } else {
-        setLoading(false);
       }
+      setLoading(false);
     }
     fetchProjects();
   }, []);
@@ -251,360 +65,211 @@ export default function OngoingProjects() {
       return;
     }
 
-    if (!bidAmount || bidAmount.trim() === "") {
-      alert("Please enter a valid bid amount");
-      return;
-    }
-
     const contract = new ethers.Contract(CONTRACT_ADDRESS, contractAbi.output.abi, signer);
     try {
       if (selectedProject) {
-        if (!selectedProject.id) {
-          throw new Error("Invalid project ID");
-        }
-        
-        let parsedBidAmount;
-        try {
-          parsedBidAmount = ethers.parseEther(bidAmount);
-        } catch (error) {
-          alert("Please enter a valid ETH amount");
-          return;
-        }
-
-        const tx = await contract.bidForModule(selectedProject.id, moduleIndex, parsedBidAmount, proposal);
+        const tx = await contract.bidForModule(selectedProject.id, moduleIndex, ethers.parseEther(bidAmount), proposal);
         await tx.wait();
         alert("Bid placed successfully!");
         setSelectedProject(null);
+        setBidAmount("");
+        setProposal("");
       } else {
         alert("No project selected.");
       }
     } catch (error) {
       console.error("Error placing bid:", error);
-      alert("Failed to place bid: " + (error instanceof Error ? error.message : "Unknown error"));
+      alert("Failed to place bid");
     }
   }
 
   async function connectWallet() {
-    if (typeof window !== 'undefined' && window.ethereum !== undefined) {
+    if (typeof window.ethereum !== "undefined") {
       try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       setSigner(signer);
-        setWalletConnected(true);
+        
+        // Get the connected address
+        const address = await signer.getAddress();
+        setUserAddress(address);
       } catch (error) {
         console.error("Error connecting wallet:", error);
+        alert("Failed to connect wallet");
       }
     } else {
       alert("Please install MetaMask");
     }
   }
 
-  // Helper to safely handle null/undefined values
-  const safeString = (value: any) => {
-    if (value === null || value === undefined) return "";
-    return String(value);
+  // Helper function to truncate long text
+  const truncateText = (text: string, maxLength: number = 150) => {
+    if (text.length <= maxLength) return text;
+    return text.substr(0, maxLength) + '...';
   };
 
+  // Helper function to format wallet address
   const formatWalletAddress = (address: string) => {
-    if (!address) return "";
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    if (!address) return "Unassigned";
+    if (address === '0x0000000000000000000000000000000000000000') return "Unassigned";
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
-
-  const extractTagline = (description: string) => {
-    if (!description) return "";
-    const firstSentence = description.split('.')[0];
-    return firstSentence.length > 80 ? firstSentence.substring(0, 80) + '...' : firstSentence;
-  };
-
-  const safelyFormatEther = (value: any) => {
-    if (!value || value === null) return "0";
-    try {
-      return ethers.formatEther(value);
-    } catch (error) {
-      console.error("Error formatting ether value:", error);
-      return "0";
-    }
-  };
-
-  // Helper to get a random project logo
-  const getRandomProjectLogo = () => {
-    const logos = [
-      <FileCode className="h-6 w-6 text-purple-600" />,
-      <Server className="h-6 w-6 text-blue-600" />,
-      <Database className="h-6 w-6 text-green-600" />,
-      <Layers className="h-6 w-6 text-yellow-600" />,
-      <Cpu className="h-6 w-6 text-red-600" />,
-      <PieChart className="h-6 w-6 text-indigo-600" />,
-      <BarChart className="h-6 w-6 text-pink-600" />,
-      <Package className="h-6 w-6 text-orange-600" />
-    ];
-    // Use deterministic selection based on project title if available
-    return logos[Math.floor(Math.random() * logos.length)];
-  };
-
-  const ProjectCard = ({ project, onBid }: { project: Project, onBid: (project: Project) => void }) => {
-    const projectLogo = getRandomProjectLogo();
-    const router = useRouter();
     
     return (
-      <Card 
-        className="bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col transition-all duration-200 hover:translate-y-[-4px] hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,0.9)] cursor-pointer"
-        onClick={() => router.push(`/projects/${project.id}`)}
-      >
-        <CardHeader className="pb-4 border-b-2 border-black bg-white px-6 pt-5">
-          <div className="flex items-start gap-4">
-            <div className="h-14 w-14 rounded-md bg-yellow-100 flex items-center justify-center border-2 border-black p-2 shrink-0">
-              {projectLogo}
+    <div className="min-h-screen bg-[#fffdf7] p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 bg-white p-6 rounded-lg border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <h1 className="text-5xl font-extrabold font-prompt text-black drop-shadow-[4px_4px_0px_rgba(0,0,0,0.3)]">
+            Find Projects
+            {/* <span className="ml-3 inline-block -rotate-3 bg-yellow-300 text-sm px-3 py-1 rounded-lg border-2 border-black">Neo Brutal</span> */}
+          </h1>
+          <button 
+            onClick={connectWallet}
+            className="px-6 py-3 bg-black text-white rounded-md border-3 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] hover:translate-y-1 hover:translate-x-1 font-bold transition-all"
+          >
+            {signer ? (
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span>Connected: {userAddress?.substring(0, 6)}...</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <CardTitle className="text-xl font-bold text-black tracking-tight leading-tight mb-1 break-words">
-                {safeString(project.title) || "Untitled Project"}
-              </CardTitle>
-              <CardDescription className="text-gray-700 font-medium text-sm line-clamp-2">
-                {extractTagline(safeString(project.description) || 'No description available')}
-              </CardDescription>
+            ) : (
+              <span>Connect Wallet</span>
+            )}
+          </button>
             </div>
+
+        {loading ? (
+          <div className="bg-white rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-black p-8 text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-black mx-auto mb-4"></div>
+            <p className="text-xl font-bold">Loading projects...</p>
           </div>
-        </CardHeader>
-        
-        <CardContent className="py-5 px-6 flex-grow space-y-5">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2 text-xs font-medium bg-gray-50 px-3 py-2 rounded-md border-2 border-gray-200">
-              <HandCoins className="h-4 w-4 text-gray-700 shrink-0" />
-              <span className="text-gray-800 font-semibold truncate">{safeString(project.ownerUsername)}</span>
-              <span className="text-gray-500 shrink-0">({formatWalletAddress(project.owner)})</span>
-            </div>
-            
-            <Badge variant="outline" className="bg-yellow-100 text-black border-2 border-yellow-300 px-3 py-1 font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]">
-              <DollarSign className="h-3 w-3 mr-1 shrink-0" />
-              {safelyFormatEther(project.budget)} ETH
-            </Badge>
+        ) : projects.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-black p-8 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-16 h-16 mx-auto mb-4 text-gray-400"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+            <p className="text-xl font-bold">No ongoing projects found</p>
+            <p className="text-gray-500 mt-2">Check back later or refresh the page</p>
           </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center gap-3">
-                <Users className="h-4 w-4 text-black" />
-              <span className="text-sm font-bold text-black">{project.developerCount}</span>
-            </div>
-              <span className="text-xs font-bold text-gray-900">{project.completionPercentage}%</span>
-            </div>
-            <div className="bg-gray-200 rounded-full h-3 w-full border border-gray-300 overflow-hidden">
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+            {projects.map((project, projectIndex) => (
               <div 
-                className="bg-green-500 rounded-full h-[10px] transition-all duration-500" 
-                style={{ width: `${project.completionPercentage}%` }} 
-              />
+                key={projectIndex} 
+                className="bg-white rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-black p-6 hover:translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-2xl font-bold">{project.title}</h2>
+                  <div className="bg-yellow-300 px-3 py-1 rounded-full border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] font-bold text-sm">
+                    {ethers.formatEther(project.budget)} cUSD
             </div>
           </div>
           
-          <div className="pb-1">
-  <p className="text-xs font-bold text-gray-700 mb-2"></p>
-  <div className="flex flex-wrap gap-2 py-1">
-    {project.modules.map((module, i) => (
-      <div 
-        key={i} 
-        className={`px-3 py-1.5 rounded-md text-xs font-bold border-2 ${
-          module.freelancer === "0x0000000000000000000000000000000000000000" 
-            ? "bg-blue-100 text-blue-900 border-blue-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]" 
-            : "bg-gray-100 text-gray-500 border-gray-300"
-        }`}
-      >
-        {safeString(module.name)}
+                <div className="bg-gray-100 p-4 rounded-md border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] mb-4">
+                  <p className="text-gray-800">{truncateText(project.description)}</p>
+                </div>
+                
+                <div className="mb-6">
+                  <h3 className="font-bold mb-2 text-lg border-b-2 border-black pb-1">Modules</h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    {project.modules.map((module, modIndex) => (
+                      <div key={modIndex} className="bg-blue-50 p-3 rounded-md border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]">
+                        <div className="flex justify-between items-center mb-1">
+                          <h4 className="font-bold">{module.name}</h4>
+                          <span className="text-sm font-medium">{module.percentageWeight}%</span>
+                        </div>
+                        
+                        <p className="text-gray-600 text-sm mb-2">
+                          Freelancer: <span className="font-mono">{formatWalletAddress(module.freelancer)}</span>
+                        </p>
+                        
+                        <button 
+                          onClick={() => {
+                            setSelectedProject(project);
+                            setModuleIndex(modIndex);
+                          }}
+                          className="w-full px-3 py-1 bg-black text-white rounded border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] hover:translate-y-0.5 hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.5)] transition-all text-sm font-bold"
+                        >
+                          Bid for This Module
+                        </button>
       </div>
     ))}
   </div>
 </div>
-        </CardContent>
-        
-        <CardFooter className="pt-3 border-t-2 border-black bg-white p-4">
-          <Button 
-            onClick={(e) => {
-              e.stopPropagation();  // Prevent card click from triggering
-              onBid(project);
-            }} 
-            className="w-full bg-yellow-400 text-black font-bold hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] hover:translate-y-1 transition-all py-3"
-            disabled={!walletConnected}
-          >
-            Bid on Project
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  };
-
-  return (
-    <div className="flex min-h-screen flex-col bg-[#fffdf7]">
-      <Navbar />
-      <main className="flex-1 container py-12 px-4 mx-auto max-w-7xl">
-        <section className="relative mb-16">
-          <div className="flex flex-col items-center justify-center text-center mb-16">
-            <h1 className="text-5xl font-extrabold mb-6 font-prompt text-black drop-shadow-[3px_3px_0px_rgba(0,0,0,0.4)]">
-              Find Projects
-            </h1>
-            <p className="text-xl text-gray-800 max-w-2xl mx-auto leading-relaxed">
-              Browse available projects and bid on modules that match your skills
-            </p>
-
-            {!walletConnected && (
-              <Button 
-                onClick={connectWallet} 
-                className="mt-10 bg-yellow-500 text-black hover:bg-yellow-400 px-8 py-5 border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:translate-y-1 transition-all flex items-center gap-3 font-bold"
-              >
-                <Wallet className="h-5 w-5" />
-                Connect Wallet
-              </Button>
-            )}
+              </div>
+            ))}
           </div>
+        )}
 
-          {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-black"></div>
-            </div>
-          ) : projects.length === 0 ? (
-            <Alert className="max-w-2xl mx-auto bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] text-black p-6">
-              <Clock className="h-6 w-6 text-black" />
-              <AlertTitle className="text-lg font-bold mt-2">No projects available</AlertTitle>
-              <AlertDescription className="mt-2 text-gray-700">
-                There are currently no ongoing projects. Check back later or create your own project.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <Tabs defaultValue="all" className="w-full">
-  <div className="flex justify-center">
-    <TabsList className="flex gap-4 mb-6 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)]">
-      <TabsTrigger
-        value="all"
-        className="px-4 py-2 text-sm font-medium text-gray-700 data-[state=active]:text-black data-[state=active]:bg-yellow-500 rounded transition-colors"
-      >
-        All Projects
-      </TabsTrigger>
-      <TabsTrigger
-        value="new"
-        className="px-4 py-2 text-sm font-medium text-gray-700 data-[state=active]:text-black data-[state=active]:bg-yellow-500 rounded transition-colors"
-      >
-        New
-      </TabsTrigger>
-      <TabsTrigger
-        value="popular"
-        className="px-4 py-2 text-sm font-medium text-gray-700 data-[state=active]:text-black data-[state=active]:bg-yellow-500 rounded transition-colors"
-      >
-        Popular
-      </TabsTrigger>
-    </TabsList>
-  </div>
-              
-              <TabsContent value="all" className="mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {projects.map((project, index) => (
-                    <ProjectCard key={index} project={project} onBid={setSelectedProject} />
-                  ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="new" className="mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {projects.slice(0, 3).map((project, index) => (
-                    <ProjectCard key={index} project={project} onBid={setSelectedProject} />
-                  ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="popular" className="mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {[...projects].sort((a, b) => Number(b.budget) - Number(a.budget)).map((project, index) => (
-                    <ProjectCard key={index} project={project} onBid={setSelectedProject} />
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          )}
-        </section>
-
-      {selectedProject && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-lg bg-white border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]">
-              <CardHeader className="border-2 border-black bg-white px-6 py-5">
-                <CardTitle className="text-black text-xl font-bold tracking-tight">Bid on {selectedProject.title}</CardTitle>
-                <CardDescription className="text-gray-700 mt-2">
-                  Choose a module and submit your proposal
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5 py-6 px-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-black">Select Module:</label>
-                  <select 
-                    className="w-full bg-white border-2 border-black rounded-none p-3 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]"
-                    value={moduleIndex}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setModuleIndex(parseInt(e.target.value))}
-                  >
-                    {selectedProject.modules.map((module, index) => (
-                      module.freelancer === "0x0000000000000000000000000000000000000000" && (
-                        <option key={index} value={index}>
-                          {module.name} ({module.percentageWeight}%)
-                        </option>
-                      )
-                    ))}
-                  </select>
-                </div>
+        {/* Bid Modal */}
+        {selectedProject && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-black p-6 max-w-md w-full relative">
+                <button 
+                  onClick={() => setSelectedProject(null)}
+                  className="absolute top-2 right-2 text-black hover:text-gray-800"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
                 
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-black">Bid Amount (ETH):</label>
-                  <Input
+              <h2 className="text-2xl font-bold mb-4 border-b-2 border-black pb-2">
+                Bid for Module
+              </h2>
+              
+              <div className="mb-4">
+                <p className="font-bold">Project: <span className="font-normal">{selectedProject.title}</span></p>
+                <p className="font-bold">Module: <span className="font-normal">{selectedProject.modules[moduleIndex]?.name || `Module #${moduleIndex}`}</span></p>
+                </div>
+              
+              <div className="space-y-4">
+                {/* <div>
+                  <label className="block font-bold mb-1">Module Index:</label>
+                  <input
+                    type="number"
+                    value={moduleIndex}
+                    onChange={(e) => setModuleIndex(parseInt(e.target.value))}
+                    className="w-full p-2 border-2 border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)]"
+                  />
+                </div>
+                 */}
+                <div>
+                  <label className="block font-bold mb-1">Bid Amount (cUSD):</label>
+                  <input
                     type="text"
                     value={bidAmount}
                     onChange={(e) => setBidAmount(e.target.value)}
-                    className="bg-white border-2 border-black rounded-none text-black p-3 h-12 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]"
-                    placeholder="0.1"
+                    className="w-full p-2 border-2 border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)]"
+                    placeholder="0.00"
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-black">Your Proposal:</label>
-                  <Textarea
+                <div>
+                  <label className="block font-bold mb-1">Proposal:</label>
+                  <textarea
                     value={proposal}
                     onChange={(e) => setProposal(e.target.value)}
-                    className="bg-white border-2 border-black rounded-none text-black min-h-[150px] p-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]"
-                    placeholder="Describe your experience and how you would approach this module..."
+                    className="w-full p-2 border-2 border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] min-h-[100px]"
+                    placeholder="Describe your experience and how you'll complete this module..."
                   />
                 </div>
-              </CardContent>
-              <CardFooter className="flex justify-between border-t-2 border-black bg-white p-5 gap-4">
-                <Button 
-                  variant="outline" 
+              
+                <div className="flex justify-between pt-2">
+                  <button 
                   onClick={() => setSelectedProject(null)}
-                  className="border-2 border-black text-black hover:text-black hover:bg-gray-100 py-3 px-5"
+                    className="px-4 py-2 bg-white text-black rounded border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)] hover:translate-y-0.5 hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.5)] transition-all font-bold"
                 >
                   Cancel
-                </Button>
-                <Button 
+                  </button>
+                  <button 
                   onClick={placeBid}
-                  className="bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] hover:translate-y-1 transition-all py-3 px-6 flex-1 font-bold"
-                  disabled={!bidAmount.trim() || !proposal.trim()}
+                    className="px-4 py-2 bg-green-500 text-white rounded border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)] hover:translate-y-0.5 hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.5)] transition-all font-bold"
                 >
-                  <CheckCircle2 className="h-5 w-5 mr-2" />
                   Submit Bid
-                </Button>
-              </CardFooter>
-            </Card>
+                  </button>
+          </div>
+            </div>
+            </div>
           </div>
         )}
-      </main>
-
-      <footer className="w-full py-10 bg-black text-white">
-        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-yellow-400">gitDontIgnore.ai</span>
-            </div>
-            <p className="text-sm text-white">© 2025 gitDontIgnore.ai. All rights reserved.</p>
-            <div className="flex items-center gap-8">
-              <a href="/terms" className="text-sm text-white hover:text-yellow-400 transition-colors">Terms</a>
-              <a href="/privacy" className="text-sm text-white hover:text-yellow-400 transition-colors">Privacy</a>
-              <a href="/contact" className="text-sm text-white hover:text-yellow-400 transition-colors">Contact</a>
-            </div>
-          </div>
         </div>
-      </footer>
     </div>
   );
 }
