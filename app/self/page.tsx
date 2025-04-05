@@ -166,7 +166,7 @@ function PassportVerifier() {
         <div className="flex min-h-screen flex-col bg-dark-900 text-white">
             <nav className="w-full border-b border-gray-800 py-4 px-6 flex items-center justify-between bg-dark-900">
                 <Link href="/" className="flex items-center">
-                    <h1 className="text-2xl font-extrabold font-prompt text-white">DevCollab<span className="text-yellow-500">.ai</span></h1>
+                    <h1 className="text-2xl font-extrabold font-prompt text-white">gitDontIgnore.ai<span className="text-yellow-500">.ai</span></h1>
                 </Link>
                 <div className="flex items-center gap-4">
                     <Link href="/chat" className="text-gray-300 hover:text-white transition-colors">

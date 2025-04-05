@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Wallet, Code, ChevronsUpDown, CheckCircle2, Clock, DollarSign, Briefcase, Users, BarChart, Layers, PieChart, Database, FileCode, Server, Cpu, Package, HandCoins } from "lucide-react";
 import Navbar from "@/components/navbar";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const CONTRACT_ADDRESS = "0x7A0399618B0bde2eeBdcAA4c1C9Da2883D118b3d";
 
@@ -42,6 +44,7 @@ export default function OngoingProjects() {
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [walletConnected, setWalletConnected] = useState(false);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchProjects() {
@@ -323,7 +326,7 @@ export default function OngoingProjects() {
     }
   };
 
-  // Helper to get a random project logo icon
+  // Helper to get a random project logo
   const getRandomProjectLogo = () => {
     const logos = [
       <FileCode className="h-6 w-6 text-purple-600" />,
@@ -341,9 +344,13 @@ export default function OngoingProjects() {
 
   const ProjectCard = ({ project, onBid }: { project: Project, onBid: (project: Project) => void }) => {
     const projectLogo = getRandomProjectLogo();
+    const router = useRouter();
     
     return (
-      <Card className="bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col transition-all duration-200 hover:translate-y-[-4px] hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,0.9)]">
+      <Card 
+        className="bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col transition-all duration-200 hover:translate-y-[-4px] hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,0.9)] cursor-pointer"
+        onClick={() => router.push(`/projects/${project.id}`)}
+      >
         <CardHeader className="pb-4 border-b-2 border-black bg-white px-6 pt-5">
           <div className="flex items-start gap-4">
             <div className="h-14 w-14 rounded-md bg-yellow-100 flex items-center justify-center border-2 border-black p-2 shrink-0">
@@ -390,11 +397,6 @@ export default function OngoingProjects() {
             </div>
           </div>
           
-          
-            
-            
-          
-          
           <div className="pb-1">
   <p className="text-xs font-bold text-gray-700 mb-2"></p>
   <div className="flex flex-wrap gap-2 py-1">
@@ -416,7 +418,10 @@ export default function OngoingProjects() {
         
         <CardFooter className="pt-3 border-t-2 border-black bg-white p-4">
           <Button 
-            onClick={() => onBid(project)} 
+            onClick={(e) => {
+              e.stopPropagation();  // Prevent card click from triggering
+              onBid(project);
+            }} 
             className="w-full bg-yellow-400 text-black font-bold hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] hover:translate-y-1 transition-all py-3"
             disabled={!walletConnected}
           >
@@ -589,9 +594,9 @@ export default function OngoingProjects() {
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-yellow-400">DevCollab</span>
+              <span className="text-xl font-bold text-yellow-400">gitDontIgnore.ai</span>
             </div>
-            <p className="text-sm text-white">© 2025 DevCollab. All rights reserved.</p>
+            <p className="text-sm text-white">© 2025 gitDontIgnore.ai. All rights reserved.</p>
             <div className="flex items-center gap-8">
               <a href="/terms" className="text-sm text-white hover:text-yellow-400 transition-colors">Terms</a>
               <a href="/privacy" className="text-sm text-white hover:text-yellow-400 transition-colors">Privacy</a>

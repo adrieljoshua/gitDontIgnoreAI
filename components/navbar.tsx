@@ -121,7 +121,7 @@ export default function Navbar() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-x-16">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl text-yellow-500 font-extrabold">DevCollab</span>
+            <span className="text-2xl text-yellow-500 font-extrabold">gitDontIgnore.ai</span>
           </Link>
           <nav className="hidden md:flex gap-6">
             <Link
@@ -132,16 +132,6 @@ export default function Navbar() {
             >
               <Globe size={16}/>
               Explore Community
-              
-            </Link>
-            <Link
-              href="/my-projects"
-              className={`text-sm flex font-bold items-center transition-colors gap-x-2 hover:text-yellow-500 ${
-                pathname.startsWith("/my-projects") ? "text-yellow-500" : ""
-              }`}
-            >
-              <UserCircle size={16}/>
-              Your Projects
               
             </Link>
             <Link

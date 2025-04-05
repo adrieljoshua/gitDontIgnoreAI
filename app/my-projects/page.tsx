@@ -421,42 +421,42 @@ export default function MyProjects() {
   
   // Helper function to process project data
   const processProjectData = async (project: any, index: number, isClientProject: boolean) => {
-    // Extract GitHub username from repo URL
-    const repoUrl = project.githubRepo || "https://github.com/username/repo";
-    const username = repoUrl.split('/')[3] || "username";
-    
-    // Get proper references to the client/owner
-    const owner = project.client || userAddress;
-    
-    // Calculate completion percentage based on modules with freelancers
-    const modules = Array.isArray(project.modules) ? project.modules : [];
-    const assignedModules = modules.filter((m: Module) => 
-      m.freelancer && m.freelancer !== "0x0000000000000000000000000000000000000000"
-    ).length;
-    const totalModules = modules.length;
-    const completionPercentage = totalModules > 0 ? 
-      Math.round((assignedModules / totalModules) * 100) : 0;
-    
-    // Extract title or use fallback
-    let projectTitle = project.title || "Untitled Project";
-    
-    // Get tagline from description
-    let tagline = "No description available";
-    if (project.description) {
-      tagline = extractTagline(String(project.description));
-    }
-    
-    return {
-      ...project,
-      id: project.id ? project.id.toString() : index.toString(),
-      title: projectTitle, 
-      tagline: tagline,
-      owner: owner,
-      githubRepo: repoUrl,
-      ownerUsername: username,
-      completionPercentage,
-      developerCount: assignedModules,
-      modules: modules,
+          // Extract GitHub username from repo URL
+          const repoUrl = project.githubRepo || "https://github.com/username/repo";
+          const username = repoUrl.split('/')[3] || "username";
+          
+          // Get proper references to the client/owner
+          const owner = project.client || userAddress;
+          
+          // Calculate completion percentage based on modules with freelancers
+          const modules = Array.isArray(project.modules) ? project.modules : [];
+          const assignedModules = modules.filter((m: Module) => 
+            m.freelancer && m.freelancer !== "0x0000000000000000000000000000000000000000"
+          ).length;
+          const totalModules = modules.length;
+          const completionPercentage = totalModules > 0 ? 
+            Math.round((assignedModules / totalModules) * 100) : 0;
+          
+          // Extract title or use fallback
+          let projectTitle = project.title || "Untitled Project";
+          
+          // Get tagline from description
+          let tagline = "No description available";
+          if (project.description) {
+            tagline = extractTagline(String(project.description));
+          }
+          
+          return {
+            ...project,
+            id: project.id ? project.id.toString() : index.toString(),
+            title: projectTitle, 
+            tagline: tagline,
+            owner: owner,
+            githubRepo: repoUrl,
+            ownerUsername: username,
+            completionPercentage,
+            developerCount: assignedModules,
+            modules: modules,
       budget: project.budget || ethers.parseEther("0"),
       isClientProject: isClientProject
     };
@@ -465,12 +465,12 @@ export default function MyProjects() {
   // Check wallet connection on page load
   useEffect(() => {
     // Check localStorage for wallet connection
-    const storedConnection = localStorage.getItem('walletConnected');
-    const storedAddress = localStorage.getItem('userAddress');
-    
-    if (storedConnection === 'true' && storedAddress) {
+      const storedConnection = localStorage.getItem('walletConnected');
+      const storedAddress = localStorage.getItem('userAddress');
+      
+      if (storedConnection === 'true' && storedAddress) {
       setUserAddress(storedAddress);
-      setWalletConnected(true);
+        setWalletConnected(true);
       
       // Verify the connection is still valid
       if (typeof window !== 'undefined' && window.ethereum !== undefined) {
@@ -482,7 +482,7 @@ export default function MyProjects() {
               localStorage.removeItem('userAddress');
               setWalletConnected(false);
               setUserAddress(null);
-            }
+    }
           })
           .catch((error: any) => {
             console.error("Error checking wallet connection:", error);
@@ -527,7 +527,10 @@ export default function MyProjects() {
     const projectType = project.isClientProject ? "Owner" : "Contributor";
     
     return (
-      <Card className="bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col transition-all duration-200 hover:translate-y-[-4px] hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,0.9)]">
+      <Card 
+        className="bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col transition-all duration-200 hover:translate-y-[-4px] hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,0.9)] cursor-pointer"
+        onClick={() => router.push(`/projects/${project.id}`)}
+      >
         <CardHeader className="pb-4 border-b-2 border-black bg-white px-6 pt-5">
           <div className="flex items-start gap-4">
             <div className="h-14 w-14 rounded-md bg-yellow-100 flex items-center justify-center border-2 border-black p-2 shrink-0">
@@ -535,9 +538,9 @@ export default function MyProjects() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex justify-between">
-                <CardTitle className="text-xl font-bold text-black tracking-tight leading-tight mb-1 break-words">
-                  {safeString(project.title) || "Untitled Project"}
-                </CardTitle>
+              <CardTitle className="text-xl font-bold text-black tracking-tight leading-tight mb-1 break-words">
+                {safeString(project.title) || "Untitled Project"}
+              </CardTitle>
                 <Badge variant="outline" className={`${project.isClientProject ? "bg-green-100 text-green-800 border-green-300" : "bg-blue-100 text-blue-800 border-blue-300"} text-xs px-2 py-1 rounded-md font-medium border-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]`}>
                   {projectType}
                 </Badge>
@@ -600,7 +603,10 @@ export default function MyProjects() {
         
         <CardFooter className="pt-3 border-t-2 border-black bg-white p-4">
           <Button 
-            onClick={() => router.push(`/projects/${project.id}`)}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card click from triggering
+              router.push(`/projects/${project.id}`);
+            }}
             className="w-full bg-yellow-400 text-black font-bold hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] hover:translate-y-1 transition-all py-3"
           >
             <div className="flex items-center gap-2">
@@ -628,7 +634,7 @@ export default function MyProjects() {
               Manage your owned and contributed projects
             </p>
           </div>
-        
+
         {!walletConnected ? (
           <div className="py-12">
             <Alert className="max-w-2xl mx-auto bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] text-black p-6">
@@ -649,13 +655,13 @@ export default function MyProjects() {
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-black"></div>
           </div>
-        ) : myProjects.length === 0 ? (
+          ) : myProjects.length === 0 ? (
           <Alert className="max-w-2xl mx-auto bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] text-black p-6">
             <AlertTriangle className="h-6 w-6 text-blue-600" />
             <AlertTitle className="text-lg font-bold mt-2">No Projects Found</AlertTitle>
-            <AlertDescription className="mt-2 text-gray-700">
+                <AlertDescription className="mt-2 text-gray-700">
               You don't have any projects yet. Create a new project or explore the community.
-            </AlertDescription>
+                </AlertDescription>
             <div className="flex gap-3 mt-6">
               <Button 
                 className="bg-yellow-500 text-black hover:bg-yellow-400 px-6 py-3 border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:translate-y-1 transition-all flex items-center gap-3 font-bold"
@@ -673,7 +679,7 @@ export default function MyProjects() {
             </div>
           </Alert>
         ) : (
-          <div>
+                  <div>
             <Tabs defaultValue="all" className="w-full">
               <div className="flex justify-center">
                 <TabsList className="flex gap-4 mb-6 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)]">
@@ -699,7 +705,7 @@ export default function MyProjects() {
                     Contributing ({myProjects.filter(p => !p.isClientProject).length})
                   </TabsTrigger>
                 </TabsList>
-              </div>
+                </div>
               
               <TabsContent value="all" className="mt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -713,7 +719,7 @@ export default function MyProjects() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {myProjects.filter(p => p.isClientProject).map((project, index) => (
                     <ProjectCard key={`owned-${index}`} project={project} />
-                  ))}
+                      ))}
                 </div>
               </TabsContent>
               
@@ -722,11 +728,11 @@ export default function MyProjects() {
                   {myProjects.filter(p => !p.isClientProject).map((project, index) => (
                     <ProjectCard key={`contrib-${index}`} project={project} />
                   ))}
-                </div>
+          </div>
               </TabsContent>
             </Tabs>
-          </div>
-        )}
+        </div>
+      )}
         </section>
       </main>
     </div>

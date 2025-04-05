@@ -37,7 +37,7 @@ export default function Home() {
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl font-prompt">How DevCollab Works</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl font-prompt">How gitDontIgnore.ai Works</h2>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl">
                   Connecting project owners with skilled developers in a few simple steps
                 </p>
@@ -83,9 +83,9 @@ export default function Home() {
         <div className="container px-4 md:px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-yellow-500">DevCollab</span>
+              <span className="text-xl font-bold text-yellow-500">gitDontIgnore.ai</span>
             </div>
-            <p className="text-sm text-gray-400">© 2025 DevCollab. All rights reserved.</p>
+            <p className="text-sm text-gray-400">© 2025 gitDontIgnore.ai. All rights reserved.</p>
             <div className="flex items-center gap-4">
               <Link href="/terms" className="text-sm text-gray-400 hover:text-white">
                 Terms
