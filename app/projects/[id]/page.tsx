@@ -1,405 +1,690 @@
-"use client"
+'use client';
+import { useState, useEffect } from "react";
+import { ethers, Contract, Signer, JsonRpcProvider } from "ethers";
+import { useParams } from "next/navigation";
+import contractABI from "../../contracts/FreelanceProject.json";
 
-import { useState } from "react"
-import { useParams } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Progress } from "@/components/ui/progress"
-import Navbar from "@/components/navbar"
+const CONTRACT_ADDRESS = "0x7A0399618B0bde2eeBdcAA4c1C9Da2883D118b3d";
+const RPC_URL = "https://alfajores-forno.celo-testnet.org/";
 
-type Developer = {
-  id: string
-  name: string
-  efficiency: number
-  wallet: string
+interface Project {
+  id: bigint;
+  client: string;
+  title: string;
+  description: string;
+  budget: bigint;
+  isPaid: boolean;
+  githubRepo: string;
+  createdAt: bigint;
+  modules: Module[];
 }
 
-type CollaborationRequest = {
-  id: string
-  developer: Developer
-  modules: string[]
-  bid: number
+interface Module {
+  name: string;
+  freelancer: string;
+  percentageWeight: bigint;
+  isCompleted: boolean;
+  isApproved: boolean;
+  submodules: Submodule[];
+  bids: ModuleBid[];
 }
 
-type Module = {
-  id: string
-  name: string
-  status: string
-  developer: string | null
-  submodules: Submodule[]
+interface Submodule {
+  name: string;
+  isCompleted: boolean;
 }
 
-type Submodule = {
-  id: string
-  name: string
-  status: string
+interface ModuleBid {
+  freelancer: string;
+  bidAmount: bigint;
+  proposal: string;
+  isApproved: boolean;
 }
 
-type Project = {
-  id: string
-  title: string
-  tagline: string
-  description: string
-  totalFund: number
-  allocatedFund: number
-  availableFund: number
-  developers: Developer[]
-  collaborationRequests: CollaborationRequest[]
-  modules: Module[]
-}
+export default function ProjectDetail() {
+  const params = useParams();
+  const projectId = BigInt(params.id as string);
+  
+  const [project, setProject] = useState<Project | null>(null);
+  const [userAddress, setUserAddress] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [bidAmount, setBidAmount] = useState<string>("");
+  const [bidProposal, setBidProposal] = useState<string>("");
+  const [selectedModuleIndex, setSelectedModuleIndex] = useState<number | null>(null);
+  const [submittingBid, setSubmittingBid] = useState(false);
+  const [bidSuccess, setBidSuccess] = useState(false);
+  const [markingComplete, setMarkingComplete] = useState(false);
+  const [markCompleteSuccess, setMarkCompleteSuccess] = useState(false);
+  const [approvingBid, setApprovingBid] = useState(false);
+  const [releasingFunds, setReleasingFunds] = useState(false);
+  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
+  const [signer, setSigner] = useState<Signer | null>(null);
+  const [isClient, setIsClient] = useState<boolean>(false);
+  const [isFreelancer, setIsFreelancer] = useState<boolean>(false);
+  const [githubOwner, setGithubOwner] = useState<string>("");
+  const [githubRepoName, setGithubRepoName] = useState<string>("");
 
-type ProjectsData = {
-  [key: string]: Project
-}
+  // Connect wallet and get user address
+  useEffect(() => {
+    async function connectWallet() {
+      if (typeof window === 'undefined') return;
+      
+      if (!window.ethereum) {
+        setError("Please install MetaMask to use this application");
+        setLoading(false);
+        return;
+      }
 
-// Mock project data
-const projectsData: ProjectsData = {
-  "1": {
-    id: "1",
-    title: "E-commerce Platform",
-    tagline: "A modern online shopping experience",
-    description:
-      "Building a scalable e-commerce platform with advanced search and recommendation features. The platform will include user authentication, product catalog, shopping cart, payment processing, and order management.",
-    totalFund: 15000,
-    allocatedFund: 8000,
-    availableFund: 7000,
-    developers: [
-      { id: "d1", name: "Alice Johnson", efficiency: 95, wallet: "0x1234...5678" },
-      { id: "d2", name: "Bob Smith", efficiency: 88, wallet: "0x8765...4321" },
-    ],
-    collaborationRequests: [
-      {
-        id: "r1",
-        developer: { id: "d3", name: "Charlie Brown", efficiency: 92, wallet: "0x2345...6789" },
-        modules: ["Payment Gateway"],
-        bid: 2000,
-      },
-      {
-        id: "r2",
-        developer: { id: "d4", name: "Diana Prince", efficiency: 97, wallet: "0x3456...7890" },
-        modules: ["User Authentication", "Product Search"],
-        bid: 3500,
-      },
-    ],
-    modules: [
-      {
-        id: "m1",
-        name: "User Authentication",
-        status: "Completed",
-        developer: "d1",
-        submodules: [
-          { id: "sm1", name: "Registration", status: "Completed" },
-          { id: "sm2", name: "Login", status: "Completed" },
-          { id: "sm3", name: "Password Reset", status: "Completed" },
-        ],
-      },
-      {
-        id: "m2",
-        name: "Product Catalog",
-        status: "In Progress",
-        developer: "d2",
-        submodules: [
-          { id: "sm4", name: "Product Listing", status: "Completed" },
-          { id: "sm5", name: "Product Details", status: "In Progress" },
-          { id: "sm6", name: "Product Search", status: "Not Started" },
-        ],
-      },
-      {
-        id: "m3",
-        name: "Shopping Cart",
-        status: "Not Started",
-        developer: null,
-        submodules: [
-          { id: "sm7", name: "Add to Cart", status: "Not Started" },
-          { id: "sm8", name: "Update Quantity", status: "Not Started" },
-          { id: "sm9", name: "Remove Items", status: "Not Started" },
-        ],
-      },
-      {
-        id: "m4",
-        name: "Payment Gateway",
-        status: "Not Started",
-        developer: null,
-        submodules: [
-          { id: "sm10", name: "Credit Card Processing", status: "Not Started" },
-          { id: "sm11", name: "PayPal Integration", status: "Not Started" },
-        ],
-      },
-      {
-        id: "m5",
-        name: "Order Management",
-        status: "Not Started",
-        developer: null,
-        submodules: [
-          { id: "sm12", name: "Order Creation", status: "Not Started" },
-          { id: "sm13", name: "Order Tracking", status: "Not Started" },
-          { id: "sm14", name: "Order History", status: "Not Started" },
-        ],
-      },
-    ],
-  },
-  // Additional projects would be defined here
-}
+      try {
+        const accounts = await window.ethereum.request({ 
+          method: "eth_requestAccounts" 
+        });
+        
+        if (accounts && accounts.length > 0) {
+          setUserAddress(accounts[0]);
+        }
+      } catch (error: any) {
+        console.error("Wallet connection error:", error);
+        setError(error.message || "Failed to connect wallet");
+      }
+    }
 
-export default function ProjectDetailPage() {
-  const params = useParams()
-  const projectId = params.id as string
-  const project = projectsData[projectId]
+    connectWallet();
+  }, []);
 
-  const [activeTab, setActiveTab] = useState("overview")
-  const [showVerification, setShowVerification] = useState(false)
-  const [verificationResults, setVerificationResults] = useState<string[]>([])
+  // Initialize provider
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.ethereum) {
+      const newProvider = new ethers.BrowserProvider(window.ethereum);
+      setProvider(newProvider);
+    }
+  }, []);
 
-  const handleAcceptBid = (requestId: string) => {
-    alert(`Bid ${requestId} accepted!`)
-    // In a real app, this would update the project state
+  // Get signer from provider
+  useEffect(() => {
+    async function getSigner() {
+      if (provider) {
+        try {
+          const signer = await provider.getSigner();
+          setSigner(signer);
+        } catch (error) {
+          console.error("Error getting signer:", error);
+        }
+      }
+    }
+
+    getSigner();
+  }, [provider]);
+
+  // Parse GitHub repository URL to get owner and repo name
+  useEffect(() => {
+    if (project?.githubRepo) {
+      try {
+        const url = new URL(project.githubRepo);
+        const pathParts = url.pathname.split('/').filter(Boolean);
+        if (pathParts.length >= 2) {
+          setGithubOwner(pathParts[0]);
+          setGithubRepoName(pathParts[1]);
+        }
+      } catch (error) {
+        console.error("Error parsing GitHub URL:", error);
+      }
+    }
+  }, [project?.githubRepo]);
+
+  // Fetch project data and determine user role
+  useEffect(() => {
+    async function fetchProject() {
+      if (!projectId) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI.output.abi, provider);
+        
+        let projectData: Project | null = null;
+
+        // First try to find the project in all ongoing projects
+        const ongoingProjects = await contract.listOngoingProjects();
+        console.log("Ongoing projects:", ongoingProjects);
+        projectData = ongoingProjects.find((p: Project) => p.id === projectId);
+
+        // If we have a user address, also check their specific projects
+        if (!projectData && userAddress) {
+          const [clientProjects, freelancerProjects] = await Promise.all([
+            contract.listProjectsByClient(userAddress),
+            contract.listProjectsForFreelancer(userAddress)
+          ]);
+
+          console.log("Client projects:", clientProjects);
+          console.log("Freelancer projects:", freelancerProjects);
+
+          const allUserProjects = [...clientProjects, ...freelancerProjects];
+          projectData = allUserProjects.find((p: Project) => p.id === projectId);
+        }
+
+        if (!projectData) {
+          console.error("Project not found with ID:", projectId.toString());
+          setError("Project not found. Please check the project ID and try again.");
+          return;
+        }
+
+        console.log("Found project:", projectData);
+        setProject(projectData);
+
+        // Determine user role
+        if (userAddress) {
+          const isProjectClient = userAddress.toLowerCase() === projectData.client.toLowerCase();
+          setIsClient(isProjectClient);
+          
+          // Check if user is a freelancer on any module
+          const isProjectFreelancer = projectData.modules.some(
+            module => module.freelancer.toLowerCase() === userAddress.toLowerCase()
+          );
+          setIsFreelancer(isProjectFreelancer);
+        }
+      } catch (error: any) {
+        console.error("Error fetching project:", error);
+        setError(error.message || "Failed to fetch project. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProject();
+  }, [projectId, userAddress]);
+
+  // Function to refresh project data
+  const refreshProjectData = async () => {
+    if (!projectId) return;
+    
+    try {
+      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI.output.abi, provider);
+      
+      const ongoingProjects = await contract.listOngoingProjects();
+      const updatedProject = ongoingProjects.find((p: Project) => p.id === projectId);
+      
+      if (updatedProject) {
+        setProject(updatedProject);
+      }
+    } catch (error) {
+      console.error("Error refreshing project data:", error);
+    }
+  };
+
+  // Function to submit a bid for a module
+  const handleBidSubmit = async (moduleIndex: number) => {
+    if (!userAddress || !project || !signer) {
+      setError("Please connect your wallet first");
+      return;
+    }
+
+    if (!bidAmount || !bidProposal) {
+      setError("Please provide both bid amount and proposal");
+      return;
+    }
+
+    setSubmittingBid(true);
+    setError(null);
+
+    try {
+      // Create contract with signer
+      const contractWithSigner = new ethers.Contract(CONTRACT_ADDRESS, contractABI.output.abi, signer);
+
+      // Convert bid amount to wei
+      const bidAmountWei = ethers.parseEther(bidAmount);
+
+      // Submit the bid
+      const tx = await contractWithSigner.bidForModule(
+        projectId,
+        moduleIndex,
+        bidAmountWei,
+        bidProposal
+      );
+
+      // Wait for transaction to be mined
+      await tx.wait();
+
+      // Refresh project data
+      await refreshProjectData();
+      
+      setBidSuccess(true);
+      setBidAmount("");
+      setBidProposal("");
+      setSelectedModuleIndex(null);
+    } catch (error: any) {
+      console.error("Error submitting bid:", error);
+      setError(error.message || "Failed to submit bid. Please try again.");
+    } finally {
+      setSubmittingBid(false);
+    }
+  };
+
+  // Function to mark a module as complete
+  const handleMarkComplete = async (moduleIndex: number) => {
+    if (!userAddress || !project || !signer) {
+      setError("Please connect your wallet first");
+      return;
+    }
+
+    setMarkingComplete(true);
+    setError(null);
+
+    try {
+      // Create contract with signer
+      const contractWithSigner = new ethers.Contract(CONTRACT_ADDRESS, contractABI.output.abi, signer);
+
+      // Mark the module as complete
+      const tx = await contractWithSigner.markModuleComplete(projectId, moduleIndex);
+
+      // Wait for transaction to be mined
+      await tx.wait();
+
+      // Refresh project data
+      await refreshProjectData();
+      
+      setMarkCompleteSuccess(true);
+      
+      // Reset success message after 3 seconds
+      setTimeout(() => {
+        setMarkCompleteSuccess(false);
+      }, 3000);
+    } catch (error: any) {
+      console.error("Error marking module as complete:", error);
+      setError(error.message || "Failed to mark module as complete. Please try again.");
+    } finally {
+      setMarkingComplete(false);
+    }
+  };
+
+  // Function to accept a bid
+  const handleAcceptBid = async (moduleIndex: number, bidIndex: number) => {
+    if (!userAddress || !project || !signer) {
+      setError("Please connect your wallet first");
+      return;
+    }
+
+    setApprovingBid(true);
+    setError(null);
+
+    try {
+      // Create contract with signer
+      const contractWithSigner = new ethers.Contract(CONTRACT_ADDRESS, contractABI.output.abi, signer);
+
+      // Approve the bid
+      const tx = await contractWithSigner.approveModuleBid(projectId, moduleIndex, bidIndex);
+
+      // Wait for transaction to be mined
+      await tx.wait();
+
+      // Refresh project data
+      await refreshProjectData();
+      
+      alert("Bid approved successfully!");
+    } catch (error: any) {
+      console.error("Error approving bid:", error);
+      setError(error.message || "Failed to approve bid. Please try again.");
+    } finally {
+      setApprovingBid(false);
+    }
+  };
+
+  // Function to release funds for a module
+  const handleReleaseFunds = async (moduleIndex: number) => {
+    if (!userAddress || !project || !signer) {
+      setError("Please connect your wallet first");
+      return;
+    }
+
+    setReleasingFunds(true);
+    setError(null);
+
+    try {
+      // Create contract with signer
+      const contractWithSigner = new ethers.Contract(CONTRACT_ADDRESS, contractABI.output.abi, signer);
+
+      // Release funds for the module
+      const tx = await contractWithSigner.releaseModuleFunds(projectId, moduleIndex);
+
+      // Wait for transaction to be mined
+      await tx.wait();
+
+      // Refresh project data
+      await refreshProjectData();
+      
+      alert("Funds released successfully!");
+    } catch (error: any) {
+      console.error("Error releasing funds:", error);
+      setError(error.message || "Failed to release funds. Please try again.");
+    } finally {
+      setReleasingFunds(false);
+    }
+  };
+
+  // Function to open the bid form
+  const openBidForm = (moduleIndex: number) => {
+    setSelectedModuleIndex(moduleIndex);
+    setBidSuccess(false);
+  };
+
+  // Function to close the bid form
+  const closeBidForm = () => {
+    setSelectedModuleIndex(null);
+    setBidAmount("");
+    setBidProposal("");
+    setBidSuccess(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-yellow-100 p-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Loading Project</h1>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+        </div>
+      </div>
+    );
   }
 
-  const handleRejectBid = (requestId: string) => {
-    alert(`Bid ${requestId} rejected!`)
-    // In a real app, this would update the project state
-  }
-
-  const handleMarkAsDone = () => {
-    setShowVerification(true)
-    // Simulate verification process
-    setTimeout(() => {
-      setVerificationResults([
-        "✅ Code quality check passed",
-        "✅ Unit tests passed",
-        "✅ Integration tests passed",
-        "✅ Performance benchmarks met",
-        "✅ Documentation complete",
-      ])
-    }, 2000)
+  if (error) {
+    return (
+      <div className="min-h-screen bg-yellow-100 p-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Error</h1>
+          <p className="text-2xl text-red-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (!project) {
-    return <div>Project not found</div>
+    return (
+      <div className="min-h-screen bg-yellow-100 p-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Project Not Found</h1>
+          <p className="text-xl">The requested project could not be found.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-dark-900">
-      <Navbar />
-      <main className="flex-1 container py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">{project.title}</h1>
-          <p className="text-gray-400">{project.tagline}</p>
+    <div className="min-h-screen bg-yellow-100 p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Project Header */}
+        <div className="bg-white rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-black p-8 mb-8">
+          <h1 className="text-4xl font-bold mb-2">{project.title}</h1>
+          <p className="text-xl text-gray-600 mb-6">A collaborative project on the blockchain</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-yellow-50 p-4 rounded border border-black">
+              <h3 className="font-bold mb-2">Project Owner</h3>
+              <p className="text-sm break-all">
+                <span className="font-semibold">Wallet:</span> {project.client}
+              </p>
+              {githubOwner && (
+                <p className="text-sm">
+                  <span className="font-semibold">GitHub:</span> {githubOwner}
+                </p>
+              )}
+            </div>
+            
+            <div className="bg-yellow-50 p-4 rounded border border-black">
+              <h3 className="font-bold mb-2">Project Details</h3>
+              <p>Budget: {ethers.formatEther(project.budget)} ETH</p>
+              <p>Status: {project.isPaid ? "Paid" : "Unpaid"}</p>
+              <p>Created: {new Date(Number(project.createdAt) * 1000).toLocaleDateString()}</p>
+              <p>Your Role: {isClient ? "Client" : isFreelancer ? "Freelancer" : "Viewer"}</p>
+            </div>
+          </div>
+          
+          <div className="bg-yellow-50 p-4 rounded border border-black mb-6">
+            <h3 className="font-bold mb-2">Project Description</h3>
+            <p className="whitespace-pre-line">{project.description}</p>
+          </div>
+          
+          <div className="bg-yellow-50 p-4 rounded border border-black">
+            <h3 className="font-bold mb-2">GitHub Repository</h3>
+            <a 
+              href={project.githubRepo} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline flex items-center"
+            >
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+              </svg>
+              {githubOwner}/{githubRepoName}
+            </a>
+          </div>
         </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-dark-800">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="modules" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black">
-              Modules
-            </TabsTrigger>
-            <TabsTrigger value="collaboration" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black">
-              Collaboration
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="md:col-span-2 bg-dark-800 border-dark-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Project Description</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-300">{project.description}</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-dark-800 border-dark-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Project Funds</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-300">Total: ${project.totalFund}</span>
-                      <span className="text-sm font-medium text-gray-300">100%</span>
-                    </div>
-                    <Progress value={100} className="h-2 bg-dark-700" />
+        
+        {/* Modules Section */}
+        <div className="bg-white rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-black p-8 mb-8">
+          <h2 className="text-2xl font-bold mb-6">Project Modules</h2>
+          
+          <div className="space-y-6">
+            {project.modules.map((module, index) => (
+              <div 
+                key={index} 
+                className="bg-yellow-50 p-6 rounded border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-xl font-bold">{module.name}</h3>
+                  <div className="text-sm">
+                    <span className={`px-2 py-1 rounded ${
+                      module.isCompleted ? "bg-green-200" : "bg-yellow-200"
+                    }`}>
+                      {module.isCompleted ? "Completed" : "In Progress"}
+                    </span>
                   </div>
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-300">Allocated: ${project.allocatedFund}</span>
-                      <span className="text-sm font-medium text-gray-300">
-                        {Math.round((project.allocatedFund / project.totalFund) * 100)}%
-                      </span>
-                    </div>
-                    <Progress value={(project.allocatedFund / project.totalFund) * 100} className="h-2 bg-dark-700" />
+                    <p className="font-semibold">Freelancer</p>
+                    <p className="text-sm">{module.freelancer || "Not assigned"}</p>
                   </div>
-
                   <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-300">Available: ${project.availableFund}</span>
-                      <span className="text-sm font-medium text-gray-300">
-                        {Math.round((project.availableFund / project.totalFund) * 100)}%
-                      </span>
-                    </div>
-                    <Progress value={(project.availableFund / project.totalFund) * 100} className="h-2 bg-dark-700" />
+                    <p className="font-semibold">Weight</p>
+                    <p className="text-sm">{Number(module.percentageWeight)}%</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
 
-              <Card className="md:col-span-3 bg-dark-800 border-dark-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Developers</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {project.developers.map((dev: Developer) => (
-                      <div key={dev.id} className="flex items-center justify-between p-3 border border-dark-600 rounded-lg bg-dark-700">
-                        <div>
-                          <p className="font-medium text-white">{dev.name}</p>
-                          <p className="text-sm text-gray-400">Wallet: {dev.wallet}</p>
+                {module.submodules.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="font-bold mb-2">Submodules</h4>
+                    <div className="space-y-2">
+                      {module.submodules.map((submodule, subIndex) => (
+                        <div 
+                          key={subIndex}
+                          className="flex justify-between items-center bg-white p-2 rounded border border-black"
+                        >
+                          <span>{submodule.name}</span>
+                          <span className={`px-2 py-1 rounded text-sm ${
+                            submodule.isCompleted ? "bg-green-200" : "bg-yellow-200"
+                          }`}>
+                            {submodule.isCompleted ? "Done" : "Pending"}
+                          </span>
                         </div>
-                        <Badge className="bg-green-500">{dev.efficiency}% Efficiency</Badge>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+                )}
 
-          <TabsContent value="modules" className="mt-6">
-            <div className="space-y-6">
-              {project.modules.map((module: Module) => (
-                <Card key={module.id} className="bg-dark-800 border-dark-700">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-white">{module.name}</CardTitle>
-                      <Badge
-                        className={
-                          module.status === "Completed"
-                            ? "bg-green-500"
-                            : module.status === "In Progress"
-                              ? "bg-yellow-500 text-black"
-                              : "bg-gray-500"
-                        }
+                {/* Action buttons for freelancers */}
+                {!isClient && (
+                  <div className="mt-4 flex space-x-2">
+                    {/* Place Bid button for modules without assigned freelancer */}
+                    {!module.freelancer && (
+                      <button
+                        onClick={() => openBidForm(index)}
+                        className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
                       >
-                        {module.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium mb-2 text-gray-300">Submodules</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                          {module.submodules.map((submodule: Submodule) => (
-                            <div key={submodule.id} className="flex justify-between items-center p-2 border border-dark-600 rounded bg-dark-700">
-                              <span className="text-gray-300">{submodule.name}</span>
-                              <Badge
-                                className={
-                                  submodule.status === "Completed"
-                                    ? "bg-green-500"
-                                    : submodule.status === "In Progress"
-                                      ? "bg-yellow-500 text-black"
-                                      : "bg-gray-500"
-                                }
-                              >
-                                {submodule.status}
-                              </Badge>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {module.status === "In Progress" && (
-                        <div className="flex justify-end">
-                          <Button onClick={handleMarkAsDone} className="bg-yellow-500 text-black hover:bg-yellow-400">
-                            Mark as Done
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {showVerification && (
-              <Card className="mt-6 bg-dark-800 border-dark-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Verification Results</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {verificationResults.map((result, index) => (
-                      <div key={index} className="flex items-center gap-2 text-gray-300">
-                        {result}
-                      </div>
-                    ))}
+                        Place Bid
+                      </button>
+                    )}
+                    
+                    {/* Mark as complete button for assigned freelancer */}
+                    {module.freelancer && 
+                     module.freelancer.toLowerCase() === userAddress?.toLowerCase() && 
+                     !module.isCompleted && (
+                      <button
+                        onClick={() => handleMarkComplete(index)}
+                        disabled={markingComplete}
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50"
+                      >
+                        {markingComplete ? "Marking..." : "Mark as Complete"}
+                      </button>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+                )}
 
-          <TabsContent value="collaboration" className="mt-6">
-            <div className="space-y-6">
-              <Card className="bg-dark-800 border-dark-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Collaboration Requests</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {project.collaborationRequests.map((request: CollaborationRequest) => (
-                      <div key={request.id} className="border border-dark-600 rounded-lg p-4 bg-dark-700">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="font-medium text-white">{request.developer.name}</h3>
-                            <p className="text-sm text-gray-400">Wallet: {request.developer.wallet}</p>
-                            <Badge className="mt-2 bg-green-500">{request.developer.efficiency}% Efficiency</Badge>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-white">${request.bid}</p>
-                            <p className="text-sm text-gray-400">Bid Amount</p>
-                          </div>
-                        </div>
+                {/* Action buttons for clients */}
+                {isClient && (
+                  <div className="mt-4 flex space-x-2">
+                    {/* Release funds button for clients */}
+                    {module.freelancer && module.isApproved && (
+                      <button
+                        onClick={() => handleReleaseFunds(index)}
+                        disabled={releasingFunds}
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50"
+                      >
+                        {releasingFunds ? "Releasing..." : "Release Funds"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Success message for marking as complete */}
+                {markCompleteSuccess && module.freelancer && 
+                 module.freelancer.toLowerCase() === userAddress?.toLowerCase() && (
+                  <div className="mt-2 p-2 bg-green-100 rounded border border-green-500">
+                    <p className="text-green-700 font-semibold">Module marked as complete!</p>
+                  </div>
+                )}
+
+                {/* Bid form */}
+                {selectedModuleIndex === index && (
+                  <div className="mt-4 p-4 bg-white rounded border-2 border-black">
+                    <h4 className="font-bold mb-2">Place Your Bid</h4>
+                    
+                    {bidSuccess ? (
+                      <div className="mb-4 p-3 bg-green-100 rounded border border-green-500">
+                        <p className="text-green-700 font-semibold">Bid submitted successfully!</p>
+                      </div>
+                    ) : (
+                      <>
                         <div className="mb-4">
-                          <h4 className="text-sm font-medium text-gray-300 mb-2">Requested Modules:</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {request.modules.map((moduleName: string) => (
-                              <Badge key={moduleName} className="bg-dark-600 text-gray-300">
-                                {moduleName}
-                              </Badge>
-                            ))}
-                          </div>
+                          <label className="block font-semibold mb-1">Bid Amount (ETH)</label>
+                          <input
+                            type="number"
+                            step="0.001"
+                            min="0"
+                            value={bidAmount}
+                            onChange={(e) => setBidAmount(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded"
+                            placeholder="0.0"
+                          />
                         </div>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                            onClick={() => handleRejectBid(request.id)}
-                          >
-                            Reject
-                          </Button>
-                          <Button
-                            className="bg-green-500 text-white hover:bg-green-600"
-                            onClick={() => handleAcceptBid(request.id)}
-                          >
-                            Accept
-                          </Button>
+                        
+                        <div className="mb-4">
+                          <label className="block font-semibold mb-1">Proposal</label>
+                          <textarea
+                            value={bidProposal}
+                            onChange={(e) => setBidProposal(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded"
+                            rows={4}
+                            placeholder="Describe your approach to this module..."
+                          />
                         </div>
+                        
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={closeBidForm}
+                            className="px-4 py-2 bg-gray-200 text-black rounded hover:bg-gray-300 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleBidSubmit(index)}
+                            disabled={submittingBid}
+                            className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                          >
+                            {submittingBid ? "Submitting..." : "Submit Bid"}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Collaboration Requests Section */}
+        <div className="bg-white rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-black p-8">
+          <h2 className="text-2xl font-bold mb-6">Collaboration Requests</h2>
+          
+          <div className="space-y-6">
+            {project.modules.map((module, index) => (
+              module.bids.length > 0 && (
+                <div key={index} className="bg-yellow-50 p-6 rounded border-2 border-black">
+                  <h3 className="text-xl font-bold mb-4">{module.name} - Bids</h3>
+                  
+                  <div className="space-y-4">
+                    {module.bids.map((bid, bidIndex) => (
+                      <div 
+                        key={bidIndex}
+                        className="bg-white p-4 rounded border border-black"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="font-semibold">{bid.freelancer}</p>
+                          <span className={`px-2 py-1 rounded text-sm ${
+                            bid.isApproved ? "bg-green-200" : "bg-yellow-200"
+                          }`}>
+                            {bid.isApproved ? "Approved" : "Pending"}
+                          </span>
+                        </div>
+                        <p className="text-sm mb-2">Amount: {ethers.formatEther(bid.bidAmount)} ETH</p>
+                        <p className="text-sm mb-4">{bid.proposal}</p>
+                        
+                        {/* Accept bid button for clients */}
+                        {isClient && !module.freelancer && !bid.isApproved && (
+                          <button
+                            onClick={() => handleAcceptBid(index, bidIndex)}
+                            disabled={approvingBid}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
+                          >
+                            {approvingBid ? "Approving..." : "Accept Bid"}
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </main>
+                </div>
+              )
+            ))}
+            
+            {project.modules.every(module => module.bids.length === 0) && (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No collaboration requests yet.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
-  )
-}
-
+  );
+} 

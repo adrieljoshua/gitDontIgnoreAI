@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Wallet, Code, ChevronsUpDown, CheckCircle2, Clock, DollarSign, Briefcase, Users, BarChart, Layers, PieChart, Database, FileCode, Server, Cpu, Package } from "lucide-react";
+import { Wallet, Code, ChevronsUpDown, CheckCircle2, Clock, DollarSign, Briefcase, Users, BarChart, Layers, PieChart, Database, FileCode, Server, Cpu, Package, HandCoins } from "lucide-react";
 import Navbar from "@/components/navbar";
 
 const CONTRACT_ADDRESS = "0x7A0399618B0bde2eeBdcAA4c1C9Da2883D118b3d";
@@ -363,7 +363,7 @@ export default function OngoingProjects() {
         <CardContent className="py-5 px-6 flex-grow space-y-5">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 text-xs font-medium bg-gray-50 px-3 py-2 rounded-md border-2 border-gray-200">
-              <Code className="h-4 w-4 text-gray-700 shrink-0" />
+              <HandCoins className="h-4 w-4 text-gray-700 shrink-0" />
               <span className="text-gray-800 font-semibold truncate">{safeString(project.ownerUsername)}</span>
               <span className="text-gray-500 shrink-0">({formatWalletAddress(project.owner)})</span>
             </div>
@@ -376,7 +376,10 @@ export default function OngoingProjects() {
           
           <div className="space-y-2">
             <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-bold text-gray-700">Completion</span>
+            <div className="flex items-center gap-3">
+                <Users className="h-4 w-4 text-black" />
+              <span className="text-sm font-bold text-black">{project.developerCount}</span>
+            </div>
               <span className="text-xs font-bold text-gray-900">{project.completionPercentage}%</span>
             </div>
             <div className="bg-gray-200 rounded-full h-3 w-full border border-gray-300 overflow-hidden">
@@ -387,37 +390,28 @@ export default function OngoingProjects() {
             </div>
           </div>
           
-          <div className="flex items-center justify-between bg-blue-50 p-3 border-2 border-blue-200 rounded-md shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-100 rounded-full p-1.5 border-2 border-blue-300">
-                <Users className="h-4 w-4 text-blue-700" />
-              </div>
-              <span className="text-sm font-bold text-blue-900">{project.developerCount} developer{project.developerCount !== 1 ? 's' : ''}</span>
-            </div>
-            <span className="text-sm font-medium bg-white px-2 py-1 rounded-md border-2 border-gray-200 text-gray-700">{project.modules.length} module{project.modules.length !== 1 ? 's' : ''}</span>
-          </div>
           
-          <div className="overflow-x-auto pb-1">
-            <p className="text-xs font-bold text-gray-700 mb-2">Available modules:</p>
-            <div className="flex gap-2 py-1" style={{
-                            overflowX: 'auto',
-                            scrollbarWidth: 'none',        // Firefox
-                            msOverflowStyle: 'none'        // IE/Edge
-                          }}>
-              {project.modules.map((module, i) => (
-                <div 
-                  key={i} 
-                  className={`min-w-fit px-3 py-1.5 rounded-md text-xs font-bold border-2 ${
-                    module.freelancer === "0x0000000000000000000000000000000000000000" 
-                      ? "bg-blue-100 text-blue-900 border-blue-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]" 
-                      : "bg-gray-100 text-gray-500 border-gray-300"
-                  }`}
-                >
-                  {safeString(module.name)}
-                </div>
-              ))}
-            </div>
-          </div>
+            
+            
+          
+          
+          <div className="pb-1">
+  <p className="text-xs font-bold text-gray-700 mb-2"></p>
+  <div className="flex flex-wrap gap-2 py-1">
+    {project.modules.map((module, i) => (
+      <div 
+        key={i} 
+        className={`px-3 py-1.5 rounded-md text-xs font-bold border-2 ${
+          module.freelancer === "0x0000000000000000000000000000000000000000" 
+            ? "bg-blue-100 text-blue-900 border-blue-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]" 
+            : "bg-gray-100 text-gray-500 border-gray-300"
+        }`}
+      >
+        {safeString(module.name)}
+      </div>
+    ))}
+  </div>
+</div>
         </CardContent>
         
         <CardFooter className="pt-3 border-t-2 border-black bg-white p-4">
