@@ -11,6 +11,10 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   callbacks: {
     async jwt({ token, account }) {
       if (account) {
@@ -22,6 +26,12 @@ export const authOptions: NextAuthOptions = {
       session.accessToken = token.accessToken as string;
       return session;
     },
+  },
+  secret: process.env.NEXTAUTH_SECRET || "your-fallback-secret-should-be-at-least-32-chars-long",
+  pages: {
+    signIn: '/auth/signin',
+    signOut: '/auth/signout',
+    error: '/auth/error',
   },
 };
 
