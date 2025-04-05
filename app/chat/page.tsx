@@ -8,6 +8,8 @@ import Navbar from "@/components/navbar"
 import { signIn, signOut, useSession } from "next-auth/react"
 import { ethers } from "ethers"
 import FreelanceProject from "../contracts/FreelanceProject.json"
+import { CheckCircle2, Check } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 declare global {
   interface Window {
@@ -41,6 +43,7 @@ type Question = {
 const rotateY = (degrees: number) => `rotateY(${degrees}deg)`;
 
 export default function ChatPage() {
+  const router = useRouter();
   const { data: session } = useSession()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [input, setInput] = useState("")
@@ -48,6 +51,9 @@ export default function ChatPage() {
   const [modules, setModules] = useState<Module[]>([])
   const [modulesParsed, setModulesParsed] = useState(false)
   const [isFlipping, setIsFlipping] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [repoUrl, setRepoUrl] = useState("")
+  const [fetchingModules, setFetchingModules] = useState(false)
   
   // Individual state variables for each answer
   const [projectType, setProjectType] = useState("")
@@ -72,6 +78,7 @@ export default function ChatPage() {
     const parseModules = async () => {
       if (projectDescription && !modulesParsed) {
         try {
+          setFetchingModules(true);
           const response = await fetch("/api/openai", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -101,6 +108,8 @@ export default function ChatPage() {
         } catch (error) {
           console.error("Error parsing response:", error);
           setModules([]);
+        } finally {
+          setFetchingModules(false);
         }
       }
     };
@@ -114,14 +123,8 @@ export default function ChatPage() {
       return;
     }
 
-    if (currentQuestionIndex > 0 && !input.trim()) {
+    if (currentQuestionIndex > 0 && currentQuestionIndex < 5 && !input.trim()) {
       alert("Please provide an answer before proceeding.");
-      return;
-    }
-
-    // For final confirmation card
-    if (currentQuestionIndex === 5 && input.toLowerCase() !== 'confirm') {
-      alert("Please type 'confirm' to proceed with repository creation.");
       return;
     }
 
@@ -133,7 +136,7 @@ export default function ChatPage() {
       const updatedQuestions = [...questions];
       updatedQuestions[currentQuestionIndex].answer = input;
       setQuestions(updatedQuestions);
-  
+
       // Update individual state variables based on current question
       switch(currentQuestionIndex) {
         case 1:
@@ -149,8 +152,8 @@ export default function ChatPage() {
           setProjectFunding(input);
           break;
         case 5:
-          setFinalConfirmation(input);
-          if (session && input.toLowerCase() === 'confirm') {
+          // Final confirmation - proceed with repository creation
+          if (session && modules.length > 0) {
             await createRepo();
           }
           break;
@@ -315,16 +318,24 @@ export default function ChatPage() {
       const repoData = await repoRes.json();
       if (!repoData.success) {
         alert("Error creating repository: " + repoData.error);
+        setIsLoading(false);
         return;
       }
   
       await registerProjectOnChain(repoData.repoUrl);
       
-      alert(`Repository '${projectName}' created and registered successfully!`);
+      // Show success state and set repo URL for linking
+      setRepoUrl(repoData.repoUrl);
+      setIsLoading(false);
+      setShowSuccess(true);
+      
+      // Redirect to my-projects after 3 seconds
+      setTimeout(() => {
+        router.push('/my-projects');
+      }, 3000);
     } catch (error) {
       console.error("Error:", error);
       alert("Something went wrong.");
-    } finally {
       setIsLoading(false);
     }
   }
@@ -351,42 +362,56 @@ export default function ChatPage() {
         </div>
       );
     } else if (index === 5) {
-      // Final confirmation card
       return (
-        <div className="flex flex-col h-full gap-4">
+        <div className="flex flex-col h-full gap-8" >
           <h3 className="text-xl font-black mb-2 text-black">PROJECT SUMMARY</h3>
-          <div className="overflow-y-auto mb-4 p-4 border-4 border-black bg-[#F3F9FF] rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-1">
-            <p className="mb-2"><span className="font-black">Project Type:</span> {projectType}</p>
-            <p className="mb-2"><span className="font-black">Project Name:</span> {projectName}</p>
-            <p className="mb-2"><span className="font-black">Funding:</span> {projectFunding} ETH</p>
-            <p className="mb-2"><span className="font-black">Description:</span> {projectDescription}</p>
+          <div className="overflow-y-auto mb-2 p-6 border-4 border-black bg-[#F3F9FF] rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-1" style={{
+      overflowX: 'auto',
+      scrollbarWidth: 'none',        // Firefox
+      msOverflowStyle: 'none'        // IE/Edge
+    }}>
+            <p className="mb-1 text-sm"><span className="font-black">Project Type:</span> {projectType}</p>
+            <p className="mb-1 text-sm"><span className="font-black">Project Name:</span> {projectName}</p>
+            <p className="mb-1 text-sm"><span className="font-black">Funding:</span> {projectFunding} ETH</p>
+            <p className="mb-1 text-sm"><span className="font-black">Description:</span> {projectDescription}</p>
           </div>
           
+          {fetchingModules && (
+            <div className="overflow-y-auto mb-2 p-3 border-4 border-black bg-[#FFE8E8] rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform -rotate-1 flex items-center justify-center">
+              <div className="flex flex-col items-center p-3">
+                <div className="flex space-x-2 mb-3">
+                  <div className="h-3 w-3 rounded-full bg-black animate-bounce"></div>
+                  <div className="h-3 w-3 rounded-full bg-black animate-bounce delay-100"></div>
+                  <div className="h-3 w-3 rounded-full bg-black animate-bounce delay-200"></div>
+                </div>
+                <p className="text-sm font-black">FETCHING PROJECT MODULES FROM AI...</p>
+              </div>
+            </div>
+          )}
+          
           {modules.length > 0 && (
-            <div className="overflow-y-auto mb-4 p-4 border-4 border-black bg-[#E9F5E1] rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform -rotate-1">
-              <h4 className="font-black mb-2">SELECTED MODULES:</h4>
+            <div className="overflow-y-auto mb-2 p-6 h-full border-4 border-black bg-[#E9F5E1] rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform -rotate-1 max-h-[250px]" style={{
+                  overflowX: 'auto',
+                  scrollbarWidth: 'none',        // Firefox
+                  msOverflowStyle: 'none'        // IE/Edge
+                }}>
+              <h4 className="font-black mb-1 text-sm">SELECTED MODULES:</h4>
               <ul className="list-disc pl-5">
                 {modules.filter(mod => mod.selected).map((mod, idx) => (
-                  <li key={idx} className="mb-1 font-medium">{mod.module}</li>
+                  <li key={idx} className="mb-1 text-xs font-medium">{mod.module}</li>
                 ))}
               </ul>
             </div>
           )}
           
-          <div className="mt-2">
-            <p className="mb-2 font-black">Type 'confirm' to proceed:</p>
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type 'confirm' to create repository..."
-              className="w-full p-4 bg-white border-4 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-lg font-medium focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-              disabled={isLoading}
-            />
-          </div>
+          {!fetchingModules && modules.length === 0 && (
+            <div className="overflow-y-auto mb-2 p-3 border-4 border-black bg-[#FFE8E8] rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform -rotate-1 flex items-center justify-center">
+              <p className="text-sm font-black text-center">NO MODULES GENERATED. PLEASE GO BACK AND PROVIDE A MORE DETAILED PROJECT DESCRIPTION.</p>
+            </div>
+          )}
         </div>
       );
     } else {
-      // Regular question cards
       return (
         <div className="flex flex-col h-full">
           <textarea
@@ -418,92 +443,129 @@ export default function ChatPage() {
       <main className="flex-1 container py-8">
         
         <div className="w-full max-w-4xl mx-auto h-[85vh] flex flex-col items-center justify-center">
-          <div className="relative w-full h-full" style={{ perspective: "2000px" }}>
-            {questions.map((q, index) => {
-              // Determine which animation to apply based on card position and flip direction
-              let animationClass = "";
-              
-              if (index === currentQuestionIndex) {
-                // Current card
-                if (isFlipping) {
-                  // When flipping, rotate current card out
-                  animationClass = flipDirection === 'next' 
-                    ? "animate-flip-out-right" 
-                    : "animate-flip-out-left";
+          {showSuccess ? (
+            <div className="animation-slide-up">
+              <Card className="w-full max-w-2xl h-[500px] mx-auto flex flex-col rounded-xl border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                <CardHeader className="bg-green-400 text-black border-b-8 border-black py-8">
+                  <CardTitle className="text-3xl font-black tracking-tight uppercase text-center">
+                    Success!
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-grow flex flex-col items-center justify-center p-8 bg-white">
+                  <div className="animation-scale-in bg-green-400 w-32 h-32 rounded-full flex items-center justify-center border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] mb-8 animation-spin-in">
+                    <Check className="w-20 h-20 text-black animation-check" strokeWidth={4} />
+                  </div>
+                  <h2 className="text-2xl font-black text-black mb-4 text-center animation-fade-in-1">
+                    GitHub Repository Created!
+                  </h2>
+                  <p className="text-lg font-medium text-center mb-6 animation-fade-in-2">
+                    Your project has been successfully registered on the blockchain.
+                  </p>
+                  <div className="bg-gray-100 py-3 px-6 rounded-lg border-2 border-black animation-fade-in-3 transform rotate-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <p className="text-sm font-medium">
+                      Redirecting to My Projects in a moment...
+                    </p>
+                  </div>
+                </CardContent>
+                <CardFooter className="border-t-8 border-black p-6 flex justify-center bg-green-400">
+                  <Button
+                    onClick={() => router.push('/my-projects')}
+                    className="bg-black text-white border-4 border-black px-8 py-3 text-xl font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
+                  >
+                    GO TO MY PROJECTS
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+          ) : (
+            <div className="relative w-full h-full" style={{ perspective: "2000px" }}>
+              {questions.map((q, index) => {
+                // Determine which animation to apply based on card position and flip direction
+                let animationClass = "";
+                
+                if (index === currentQuestionIndex) {
+                  // Current card
+                  if (isFlipping) {
+                    // When flipping, rotate current card out
+                    animationClass = flipDirection === 'next' 
+                      ? "animate-flip-out-right" 
+                      : "animate-flip-out-left";
+                  } else {
+                    // When not flipping, current card is visible
+                    animationClass = "rotate-y-0";
+                  }
+                } else if (index === currentQuestionIndex + 1 && flipDirection === 'next' && isFlipping) {
+                  // Next card coming in
+                  animationClass = "animate-flip-in-right";
+                } else if (index === currentQuestionIndex - 1 && flipDirection === 'back' && isFlipping) {
+                  // Previous card coming in
+                  animationClass = "animate-flip-in-left";
                 } else {
-                  // When not flipping, current card is visible
-                  animationClass = "rotate-y-0";
+                  // All other cards are flipped away
+                  animationClass = index < currentQuestionIndex 
+                    ? "rotate-y--180" // Cards before current are flipped left
+                    : "rotate-y-180";  // Cards after current are flipped right
                 }
-              } else if (index === currentQuestionIndex + 1 && flipDirection === 'next' && isFlipping) {
-                // Next card coming in
-                animationClass = "animate-flip-in-right";
-              } else if (index === currentQuestionIndex - 1 && flipDirection === 'back' && isFlipping) {
-                // Previous card coming in
-                animationClass = "animate-flip-in-left";
-              } else {
-                // All other cards are flipped away
-                animationClass = index < currentQuestionIndex 
-                  ? "rotate-y--180" // Cards before current are flipped left
-                  : "rotate-y-180";  // Cards after current are flipped right
-              }
-              
-              return (
-                <div
-                  key={q.id}
-                  className={`absolute w-full h-full ${animationClass} 
-                    ${(index === currentQuestionIndex || 
-                      (index === currentQuestionIndex + 1 && isFlipping && flipDirection === 'next') ||
-                      (index === currentQuestionIndex - 1 && isFlipping && flipDirection === 'back')) 
-                      ? 'z-10' : 'z-0 pointer-events-none'}
-                    ${index !== currentQuestionIndex && !isFlipping ? 'opacity-0' : 'opacity-100'}
-                  `}
-                  style={{ 
-                    transformStyle: 'preserve-3d', 
-                    backfaceVisibility: 'hidden',
-                    transform: animationClass.includes('animate') ? undefined : rotateY(animationClass === 'rotate-y-0' ? 0 : animationClass === 'rotate-y--180' ? -180 : 180),
-                    transition: isFlipping ? 'none' : 'all 0.6s ease-in-out'
-                  }}
-                >      
-                  <Card className="w-full max-w-2xl h-[600px] mx-auto flex flex-col rounded-xl border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-                    <CardHeader className="bg-yellow-400 text-black border-b-8 border-black py-8">
-                      <CardTitle className="text-3xl font-black tracking-tight uppercase text-center">
-                        {q.question}
-                      </CardTitle>
-                      <div className="absolute top-4 right-4 bg-black text-white text-xs font-bold px-3 py-1 rounded-full">
-                        {index + 1}/{questions.length}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow p-8 bg-white relative overflow-y-auto">
-                      {renderCardContent(index)}
-                      <div className="absolute inset-0 border-4 border-dashed border-gray-200 m-2 pointer-events-none rounded-xl"></div>
-                    </CardContent>
-                    <CardFooter className="border-t-8 border-black p-6 flex justify-between bg-yellow-400">
-                      <Button
-                        onClick={handleBack}
-                        disabled={currentQuestionIndex === 0 || isFlipping || isLoading}
-                        className="bg-white text-black border-4 border-black px-6 py-3 text-xl font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50"
-                      >
-                        BACK
-                      </Button>
-                      <Button
-                        onClick={handleNext}
-                        disabled={
-                          (currentQuestionIndex === 0 && !session) || 
-                          isFlipping || 
-                          isLoading || 
-                          (currentQuestionIndex > 0 && currentQuestionIndex < 5 && !input.trim()) ||
-                          (currentQuestionIndex === 5 && input.toLowerCase() !== 'confirm')
-                        }
-                        className="bg-black text-white border-4 border-black px-6 py-3 text-xl font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50"
-                      >
-                        {currentQuestionIndex === 5 ? "CREATE PROJECT" : "NEXT"}
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </div>
-              );
-            })}
-          </div>
+                
+                return (
+                  <div
+                    key={q.id}
+                    className={`absolute w-full h-full ${animationClass} 
+                      ${(index === currentQuestionIndex || 
+                        (index === currentQuestionIndex + 1 && isFlipping && flipDirection === 'next') ||
+                        (index === currentQuestionIndex - 1 && isFlipping && flipDirection === 'back')) 
+                        ? 'z-10' : 'z-0 pointer-events-none'}
+                      ${index !== currentQuestionIndex && !isFlipping ? 'opacity-0' : 'opacity-100'}
+                    `}
+                    style={{ 
+                      transformStyle: 'preserve-3d', 
+                      backfaceVisibility: 'hidden',
+                      transform: animationClass.includes('animate') ? undefined : rotateY(animationClass === 'rotate-y-0' ? 0 : animationClass === 'rotate-y--180' ? -180 : 180),
+                      transition: isFlipping ? 'none' : 'all 0.6s ease-in-out'
+                    }}
+                  >      
+                    <Card className="w-full max-w-2xl h-[650px] mx-auto flex flex-col rounded-xl border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                      <CardHeader className="bg-yellow-300 text-black border-b-8 border-black py-8">
+                        <CardTitle className="text-3xl font-black tracking-tight uppercase text-center">
+                          {q.question}
+                        </CardTitle>
+                        <div className="absolute top-4 right-4 bg-black text-white text-xs font-bold px-3 py-1 rounded-full">
+                          {index + 1}/{questions.length}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="flex-grow p-8 bg-white relative overflow-y-auto">
+                        {renderCardContent(index)}
+                        <div className="absolute inset-0 border-4 border-dashed border-gray-200 m-2 pointer-events-none rounded-xl"></div>
+                      </CardContent>
+                      <CardFooter className="border-t-8 border-black p-6 flex justify-between bg-yellow-300">
+                        <Button
+                          onClick={handleBack}
+                          disabled={currentQuestionIndex === 0 || isFlipping || isLoading}
+                          className="bg-white text-black border-4 border-black px-6 py-3 text-xl font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50"
+                        >
+                          BACK
+                        </Button>
+                        <Button
+                          onClick={handleNext}
+                          disabled={
+                            (currentQuestionIndex === 0 && !session) || 
+                            isFlipping || 
+                            isLoading || 
+                            (currentQuestionIndex > 0 && currentQuestionIndex < 5 && !input.trim()) ||
+                            (currentQuestionIndex === 5 && fetchingModules) || 
+                            (currentQuestionIndex === 5 && modules.length === 0)
+                          }
+                          className="bg-black text-white border-4 border-black px-6 py-3 text-xl font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50"
+                        >
+                          {currentQuestionIndex === 5 ? "CREATE PROJECT" : "NEXT"}
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </div>
+                );
+              })}
+            </div>
+          )}
           
           {isLoading && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -538,6 +600,66 @@ export default function ChatPage() {
         @keyframes flipInLeft {
           from { transform: rotateY(-180deg); }
           to { transform: rotateY(0deg); }
+        }
+        
+        @keyframes slideUp {
+          0% { transform: translateY(30px); opacity: 0; }
+          100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+          0% { transform: scale(0); }
+          70% { transform: scale(1.1); }
+          100% { transform: scale(1); }
+        }
+        
+        @keyframes spinIn {
+          0% { transform: rotate(-180deg) scale(0); }
+          70% { transform: rotate(30deg) scale(1.1); }
+          100% { transform: rotate(0) scale(1); }
+        }
+        
+        @keyframes drawCheck {
+          0% { stroke-dashoffset: 100; }
+          100% { stroke-dashoffset: 0; }
+        }
+        
+        @keyframes fadeIn {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animation-slide-up {
+          animation: slideUp 0.6s ease-out forwards;
+        }
+        
+        .animation-scale-in {
+          animation: scaleIn 0.8s ease-out forwards;
+        }
+        
+        .animation-spin-in {
+          animation: spinIn 0.8s ease-out forwards;
+        }
+        
+        .animation-check {
+          stroke-dasharray: 100;
+          stroke-dashoffset: 100;
+          animation: drawCheck 0.8s ease-out 0.4s forwards;
+        }
+        
+        .animation-fade-in-1 {
+          opacity: 0;
+          animation: fadeIn 0.6s ease-out 0.6s forwards;
+        }
+        
+        .animation-fade-in-2 {
+          opacity: 0;
+          animation: fadeIn 0.6s ease-out 0.8s forwards;
+        }
+        
+        .animation-fade-in-3 {
+          opacity: 0;
+          animation: fadeIn 0.6s ease-out 1s forwards;
         }
         
         .animate-flip-out-right {
