@@ -135,6 +135,16 @@ export default function Navbar() {
               
             </Link>
             <Link
+              href="/my-projects"
+              className={`text-sm flex font-bold items-center transition-colors gap-x-2 hover:text-yellow-500 ${
+                pathname.startsWith("/my-projects") ? "text-yellow-500" : ""
+              }`}
+            >
+              <UserCircle size={16}/>
+              Your Projects
+              
+            </Link>
+            <Link
               href="/chat"
               className={`text-sm flex font-bold items-center transition-colors gap-x-2 hover:text-yellow-500 ${
                 pathname.startsWith("/chat") ? "text-yellow-500" : ""
