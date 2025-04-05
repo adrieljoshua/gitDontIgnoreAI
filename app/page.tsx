@@ -1,13 +1,14 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import Navbar from "@/components/navbar"
+import { Code2, Hammer } from "lucide-react"
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
-        <section className="relative min-h-[80vh] py-32 text-center">
+        <section className="relative h-screen flex items-center justify-center text-center">
           <div className="absolute inset-0 z-0">
             <img 
               src="/hero-bg.jpg" 
@@ -16,17 +17,17 @@ export default function Home() {
             />
             <div className="absolute inset-0 bg-dark-900/80"></div>
           </div>
-          <div className="relative z-10 flex flex-col items-center justify-center h-full">
-            <h1 className="text-6xl font-extrabold mb-8 font-prompt text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">DevCollab Platform</h1>
+          <div className="relative z-10 flex flex-col items-center justify-center max-w-4xl mx-auto px-4">
+            <h1 className="text-7xl font-extrabold mb-8 font-prompt text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">DevCollab Platform</h1>
             <p className="text-2xl text-gray-300 mb-12 max-w-2xl mx-auto font-prompt drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
               A platform for developers to collaborate on projects, share knowledge, and build amazing things together.
             </p>
             <div className="flex justify-center gap-6">
               <Button asChild className="bg-yellow-500 text-black hover:bg-yellow-400 text-lg px-8 py-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all">
-                <Link href="/chat">Build Project</Link>
+                <Link href="/chat" className="flex items-center gap-2">Build Project <Hammer size={20} /></Link>
               </Button>
               <Button asChild variant="outline" className="bg-white text-black border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all text-lg px-8 py-6">
-                <Link href="/developers">For Developers</Link>
+                <Link href="/developers" className="flex items-center gap-2">For Developers <Code2 size={20}/></Link>
               </Button>
             </div>
           </div>
