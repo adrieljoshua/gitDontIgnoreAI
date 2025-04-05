@@ -12,9 +12,9 @@ export default function Home() {
             <img 
               src="/hero-bg.jpg" 
               alt="Hero background" 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover brightness-50"
             />
-            <div className="absolute inset-0 bg-dark-900/70"></div>
+            <div className="absolute inset-0 bg-dark-900/80"></div>
           </div>
           <div className="relative z-10 flex flex-col items-center justify-center h-full">
             <h1 className="text-6xl font-extrabold mb-8 font-prompt text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">DevCollab Platform</h1>

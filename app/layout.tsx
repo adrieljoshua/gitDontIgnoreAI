@@ -1,33 +1,35 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import { Prompt } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
+"use client";
 
-const inter = Inter({ subsets: ["latin"] })
-const prompt = Prompt({ 
-  weight: ['400', '500', '600', '700'],
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { SessionProvider } from "next-auth/react";
+
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  variable: '--font-prompt',
-})
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="light" style={{colorScheme: "light"}}>
-      <body className={`${inter.className} ${prompt.variable}`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <SessionProvider refetchInterval={5 * 60} refetchOnWindowFocus={true}>
           {children}
-        </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
-  )
+  );
 }
-
-
-
-import './globals.css'
