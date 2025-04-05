@@ -343,7 +343,7 @@ export default function OngoingProjects() {
     const projectLogo = getRandomProjectLogo();
     
     return (
-      <Card className="bg-white border-3 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col transition-all duration-200 hover:translate-y-[-4px] hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,0.9)]">
+      <Card className="bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col transition-all duration-200 hover:translate-y-[-4px] hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,0.9)]">
         <CardHeader className="pb-4 border-b-2 border-black bg-white px-6 pt-5">
           <div className="flex items-start gap-4">
             <div className="h-14 w-14 rounded-md bg-yellow-100 flex items-center justify-center border-2 border-black p-2 shrink-0">
@@ -399,7 +399,11 @@ export default function OngoingProjects() {
           
           <div className="overflow-x-auto pb-1">
             <p className="text-xs font-bold text-gray-700 mb-2">Available modules:</p>
-            <div className="flex gap-2 py-1">
+            <div className="flex gap-2 py-1" style={{
+                            overflowX: 'auto',
+                            scrollbarWidth: 'none',        // Firefox
+                            msOverflowStyle: 'none'        // IE/Edge
+                          }}>
               {project.modules.map((module, i) => (
                 <div 
                   key={i} 
@@ -435,7 +439,7 @@ export default function OngoingProjects() {
       <main className="flex-1 container py-12 px-4 mx-auto max-w-7xl">
         <section className="relative mb-16">
           <div className="flex flex-col items-center justify-center text-center mb-16">
-            <h1 className="text-5xl font-extrabold mb-6 font-prompt text-black drop-shadow-[3px_3px_0px_rgba(0,0,0,0.8)]">
+            <h1 className="text-5xl font-extrabold mb-6 font-prompt text-black drop-shadow-[3px_3px_0px_rgba(0,0,0,0.4)]">
               Find Projects
             </h1>
             <p className="text-xl text-gray-800 max-w-2xl mx-auto leading-relaxed">
@@ -467,11 +471,28 @@ export default function OngoingProjects() {
             </Alert>
           ) : (
             <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid grid-cols-3 max-w-md mx-auto mb-10 bg-white border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)]">
-                <TabsTrigger value="all" className="text-black data-[state=active]:bg-yellow-400 data-[state=active]:text-black border-r-2 border-black py-3 font-semibold">All Projects</TabsTrigger>
-                <TabsTrigger value="new" className="text-black data-[state=active]:bg-yellow-400 data-[state=active]:text-black border-r-2 border-black py-3 font-semibold">New</TabsTrigger>
-                <TabsTrigger value="popular" className="text-black data-[state=active]:bg-yellow-400 data-[state=active]:text-black py-3 font-semibold">Popular</TabsTrigger>
-              </TabsList>
+  <div className="flex justify-center">
+    <TabsList className="flex gap-4 mb-6 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)]">
+      <TabsTrigger
+        value="all"
+        className="px-4 py-2 text-sm font-medium text-gray-700 data-[state=active]:text-black data-[state=active]:bg-yellow-500 rounded transition-colors"
+      >
+        All Projects
+      </TabsTrigger>
+      <TabsTrigger
+        value="new"
+        className="px-4 py-2 text-sm font-medium text-gray-700 data-[state=active]:text-black data-[state=active]:bg-yellow-500 rounded transition-colors"
+      >
+        New
+      </TabsTrigger>
+      <TabsTrigger
+        value="popular"
+        className="px-4 py-2 text-sm font-medium text-gray-700 data-[state=active]:text-black data-[state=active]:bg-yellow-500 rounded transition-colors"
+      >
+        Popular
+      </TabsTrigger>
+    </TabsList>
+  </div>
               
               <TabsContent value="all" className="mt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -503,7 +524,7 @@ export default function OngoingProjects() {
       {selectedProject && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <Card className="w-full max-w-lg bg-white border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]">
-              <CardHeader className="border-b-2 border-black bg-white px-6 py-5">
+              <CardHeader className="border-2 border-black bg-white px-6 py-5">
                 <CardTitle className="text-black text-xl font-bold tracking-tight">Bid on {selectedProject.title}</CardTitle>
                 <CardDescription className="text-gray-700 mt-2">
                   Choose a module and submit your proposal
