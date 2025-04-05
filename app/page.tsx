@@ -27,7 +27,7 @@ export default function Home() {
                 <Link href="/chat" className="flex items-center gap-2">Build Project <Hammer size={20} /></Link>
               </Button>
               <Button asChild variant="outline" className="bg-white text-black border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all text-lg px-8 py-6">
-                <Link href="/developers" className="flex items-center gap-2">For Developers <Code2 size={20}/></Link>
+                <Link href="/find-project" className="flex items-center gap-2">For Developers <Code2 size={20}/></Link>
               </Button>
             </div>
           </div>

@@ -115,9 +115,8 @@ export default function ChatPage() {
 
     // For final confirmation card
     if (currentQuestionIndex === 5 && input.toLowerCase() !== 'confirm') {
-      // Remove the confirm requirement
-      // alert("Please type 'confirm' to proceed with repository creation.");
-      // return;
+      alert("Please type 'confirm' to proceed with repository creation.");
+      return;
     }
 
     setIsFlipping(true);
@@ -144,6 +143,9 @@ export default function ChatPage() {
           break;
         case 5:
           setFinalConfirmation(input);
+          if (session && input.toLowerCase() === 'confirm') {
+            await createRepo();
+          }
           break;
       }
     }
@@ -256,8 +258,7 @@ export default function ChatPage() {
       return true;
     } catch (error) {
       console.error("Blockchain error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown blockchain error";
-      alert(`Repository created but blockchain registration failed: ${errorMessage}`);
+      alert("Failed to register project on-chain");
       return false;
     }
   }
@@ -276,12 +277,6 @@ export default function ChatPage() {
     setIsLoading(true);
   
     try {
-      // Validate repository name
-      const validRepoName = projectName.replace(/[^a-zA-Z0-9-_]/g, "-");
-      if (validRepoName !== projectName) {
-        console.log(`Repository name sanitized from "${projectName}" to "${validRepoName}"`);
-      }
-      
       const projectData = {
         tagline: projectType,
         description: projectDescription,
@@ -295,12 +290,10 @@ export default function ChatPage() {
       }).then((res) => res.json());
   
       const payload = {
-        repoName: validRepoName,
+        repoName: projectName,
         readmeContent: projectMarkdown.response,
         selectedModules,
       };
-
-      console.log("Creating repository with payload:", payload);
 
       const repoRes = await fetch("/api/github/create-repo", {
         method: "POST",
@@ -311,37 +304,18 @@ export default function ChatPage() {
         body: JSON.stringify(payload),
       });
   
-      if (!repoRes.ok) {
-        // Try to get detailed error message
-        let errorMsg = "Repository creation failed";
-        try {
-          const errorData = await repoRes.json();
-          errorMsg = errorData.error || errorData.message || errorMsg;
-        } catch (e) {
-          console.error("Error parsing error response:", e);
-        }
-        throw new Error(errorMsg);
-      }
-      
       const repoData = await repoRes.json();
-      console.log("Repository creation response:", repoData);
-      
       if (!repoData.success) {
-        throw new Error(repoData.error || "Repository creation failed");
+        alert("Error creating repository: " + repoData.error);
+        return;
       }
   
-      try {
-        await registerProjectOnChain(repoData.repoUrl);
-        alert(`Repository '${validRepoName}' created and registered successfully!`);
-      } catch (error) {
-        console.error("Blockchain error:", error);
-        const errorMessage = error instanceof Error ? error.message : "Unknown blockchain error";
-        alert(`Repository created but blockchain registration failed: ${errorMessage}`);
-      }
+      await registerProjectOnChain(repoData.repoUrl);
+      
+      alert(`Repository '${projectName}' created and registered successfully!`);
     } catch (error) {
-      console.error("Error during repository creation:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      alert("Failed to create repository: " + errorMessage);
+      console.error("Error:", error);
+      alert("Something went wrong.");
     } finally {
       setIsLoading(false);
     }
@@ -376,56 +350,25 @@ export default function ChatPage() {
             <p className="mb-2"><span className="font-bold">Description:</span> {projectDescription}</p>
           </div>
           
-          <div className="overflow-y-auto flex-grow border-4 border-black bg-white p-4 mb-4">
-            <h4 className="text-lg font-black mb-2 text-black">PROJECT MODULES</h4>
-            
-            {modules.length > 0 ? (
-              <div>
-                {modules.map((mod, mIndex) => (
-                  <div key={mIndex} className="mb-4">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={mod.selected}
-                        onChange={() => toggleModule(mIndex)}
-                        className="w-5 h-5 border-2 border-black mr-3"
-                      />
-                      <span className="text-lg font-bold">{mod.module}</span>
-                      <span className="ml-2 text-sm bg-yellow-400 px-2 py-1 rounded-full border-2 border-black">
-                        Weight: {mod.weightage}
-                      </span>
-                    </label>
-                    
-                    <div className="ml-8 mt-2">
-                      {mod.submodules.map((sub, sIndex) => (
-                        <div key={sIndex} className="mb-2">
-                          <label className="flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={sub.selected}
-                              onChange={() => toggleSubmodule(mIndex, sIndex)}
-                              className="w-4 h-4 border-2 border-black mr-2"
-                            />
-                            <span className="font-semibold">{sub.title}</span>
-                          </label>
-                          <p className="ml-6 text-sm">{sub.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+          {modules.length > 0 && (
+            <div className="overflow-y-auto mb-4 p-3 border-4 border-black bg-white">
+              <h4 className="font-bold mb-2">SELECTED MODULES:</h4>
+              <ul className="list-disc pl-5">
+                {modules.filter(mod => mod.selected).map((mod, idx) => (
+                  <li key={idx} className="mb-1">{mod.module}</li>
                 ))}
-              </div>
-            ) : (
-              <div className="text-center p-4">
-                <div className="flex justify-center space-x-2 mb-4">
-                  <div className="h-4 w-4 rounded-full bg-black animate-bounce"></div>
-                  <div className="h-4 w-4 rounded-full bg-black animate-bounce delay-100"></div>
-                  <div className="h-4 w-4 rounded-full bg-black animate-bounce delay-200"></div>
-                </div>
-                <p className="font-bold">Computing project modules...</p>
-              </div>
-            )}
-          </div>
+              </ul>
+            </div>
+          )}
+          
+          <p className="mb-2 font-bold">Type 'confirm' to proceed:</p>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type 'confirm' to create repository..."
+            className="w-full p-3 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+            disabled={isLoading}
+          />
         </div>
       );
     } else {
@@ -483,28 +426,19 @@ export default function ChatPage() {
                     >
                       BACK
                     </Button>
-                    {index === 5 ? (
-                      <Button
-                        onClick={createRepo}
-                        disabled={!session || isLoading || modules.length === 0}
-                        className="bg-green-500 text-white border-4 border-black px-6 py-2 text-xl font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
-                      >
-                        CREATE PROJECT
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={handleNext}
-                        disabled={
-                          (currentQuestionIndex === 0 && !session) || 
-                          isFlipping || 
-                          isLoading || 
-                          (currentQuestionIndex > 0 && currentQuestionIndex < 5 && !input.trim())
-                        }
-                        className="bg-black text-white border-4 border-black px-6 py-2 text-xl font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
-                      >
-                        NEXT
-                      </Button>
-                    )}
+                    <Button
+                      onClick={handleNext}
+                      disabled={
+                        (currentQuestionIndex === 0 && !session) || 
+                        isFlipping || 
+                        isLoading || 
+                        (currentQuestionIndex > 0 && currentQuestionIndex < 5 && !input.trim()) ||
+                        (currentQuestionIndex === 5 && input.toLowerCase() !== 'confirm')
+                      }
+                      className="bg-black text-white border-4 border-black px-6 py-2 text-xl font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
+                    >
+                      {currentQuestionIndex === 5 ? "CREATE PROJECT" : "NEXT"}
+                    </Button>
                   </CardFooter>
                 </Card>
               </div>
