@@ -1,6 +1,6 @@
 # GitDontIgnore.ai - Decentralized Developer Marketplace
 
-GitDontIgnore.ai is a decentralized marketplace for developers built on the Celo blockchain, enhanced with AI verification tools for code quality and developer identity verification.
+GitDontIgnore.ai is a decentralized marketplace for developers built on the **Base** blockchain, enhanced with AI verification tools for code quality and developer identity verification.
 
 ## Overview
 
@@ -8,54 +8,55 @@ This platform connects clients with developers through a smart contract-based pr
 
 ### Key Features
 
-- **Smart Contract Project Management**: Create, bid on, and manage development projects with modular structure
-- **Identity Verification**: Secure developer onboarding with GitHub integration via Self Protocol
-- **AI-powered Code Testing**: Automated module verification using Anchor Browser AI
-- **Wallet Integration**: Celo blockchain integration for transparent payments
-- **Neo-brutalist UI**: Modern, distinctive design language throughout the platform
+- **Smart Contract Project Management**: Create, bid on, and manage development projects with modular structure  
+- **Identity Verification**: Secure developer onboarding with GitHub integration via Self Protocol  
+- **AI-powered Code Testing**: Automated module verification using Anchor Browser AI  
+- **Wallet Integration**: Base blockchain integration for transparent payments  
+- **Neo-brutalist UI**: Modern, distinctive design language throughout the platform  
 
 ## Architecture
 
-### Smart Contracts (Celo Testnet)
+### Smart Contracts (Base Sepolia Testnet)
 
-The project uses Solidity smart contracts deployed on the Celo Alfajores testnet:
+The project uses Solidity smart contracts deployed on the **Base Sepolia testnet**:
 
-- **FreelanceProjectContract** (`0x7A0399618B0bde2eeBdcAA4c1C9Da2883D118b3d`): The main contract handling:
+- **FreelanceProjectContract** (`0xB339eae8a44256CB77DCbFe10138377cdeFaD5C9`): The main contract handling:
   - Project registration and management
   - Module bidding and assignment
   - Work verification and milestone approval
   - Escrow and payment release
 
 Key contract functions:
-- `registerProject`: Create new client projects with modules
-- `bidForModule`: Allow freelancers to bid on specific modules
-- `approveModuleBid`: Client selects developer for module
-- `markModuleComplete`: Developer submits completed work
-- `approveModule`: Client approves completed module
-- `releaseModuleFunds`: Release payment to developer
+- `registerProject`: Create new client projects with modules  
+- `bidForModule`: Allow freelancers to bid on specific modules  
+- `approveModuleBid`: Client selects developer for module  
+- `markModuleComplete`: Developer submits completed work  
+- `approveModule`: Client approves completed module  
+- `releaseModuleFunds`: Release payment to developer  
 
 ### Frontend Stack
 
-- **Framework**: Next.js (App Router)
-- **Styling**: TailwindCSS with neo-brutalist design principles
-- **Blockchain Integration**: ethers.js for Celo interaction
-- **Authentication**: Self Protocol for identity verification
+- **Framework**: Next.js (App Router)  
+- **Styling**: TailwindCSS with neo-brutalist design principles  
+- **Blockchain Integration**: `ethers.js` for Base interaction  
+- **Authentication**: Self Protocol for identity verification  
 
 ### AI Integration
 
 The platform leverages several AI tools:
 
-1. **Self Protocol Integration** (`@selfxyz/qrcode` & `@selfxyz/core`):
-   - Secure identity verification connecting GitHub accounts to wallet addresses
-   - QR code-based verification flow with Self mobile app
-   - Credential verification on-chain
+1. **Self Protocol Integration** (`@selfxyz/qrcode` & `@selfxyz/core`):  
+   - Secure identity verification connecting GitHub accounts to wallet addresses  
+   - QR code-based verification flow with Self mobile app  
+   - Credential verification on-chain  
 
-2. **Anchor Browser AI** (Testing & Verification):
-   - Automated module testing through browser automation
-   - AI agent evaluates whether implemented features meet requirements
-   - Test results recorded for quality assurance
+2. **Anchor Browser AI** (Testing & Verification):  
+   - Automated module testing through browser automation  
+   - AI agent evaluates whether implemented features meet requirements  
+   - Test results recorded for quality assurance  
 
 ## Project Structure
+
 
 ```
 /app
@@ -143,7 +144,6 @@ const start = async (task: string) => {
 
 ### Prerequisites
 - Node.js (v18+)
-- Celo wallet (MetaMask with Celo configuration)
 - Self Protocol mobile app (for identity verification)
 
 ### Installation
